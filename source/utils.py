@@ -33,6 +33,6 @@ def reconstruct_2(ts, m, J=None):
     for i in range(1, m+1):
         ts_sliced = ts[i:-(m-i+1)]
         l.append(ts_sliced)
-    # ts_reconstructed = np.concatenate(l, axis=1)
-    return l
+    ts_reconstructed = np.concatenate(l, axis=1)
+    return ts_reconstructed
 
