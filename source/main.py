@@ -1,4 +1,5 @@
 import numpy as np
+from source.utils import reconstruct_2
 from pickle import load, dump
 from tqdm import tqdm
 from source.wishart import Wishart
@@ -20,6 +21,8 @@ if __name__ == "__main__":
         length = reconstructed_ts.shape[0]
         train_length = length // 3 * 2
         reconstructed_ts = reconstructed_ts[:train_length]
+        reconstructed_ts = reconstruct_2(ts=reconstructed_ts, m=5)
+
 
     for combination in tqdm(combinations):
         k = combination[0]
