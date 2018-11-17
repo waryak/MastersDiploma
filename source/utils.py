@@ -29,10 +29,10 @@ def reconstruct_2(ts, m, J=None):
     if np.ndim(ts) == 1:
         # Reshape this array
         ts = ts.reshape(-1, 1)
-        l.append(ts)
+        l.append(ts[:-(m+1)])
     for i in range(1, m+1):
         ts_sliced = ts[i:-(m-i+1)]
         l.append(ts_sliced)
-    ts_reconstructed = np.concatenate(l, axis=1)
-    return ts_reconstructed
+    # ts_reconstructed = np.concatenate(l, axis=1)
+    return l
 
