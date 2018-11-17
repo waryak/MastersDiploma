@@ -1,8 +1,8 @@
 import numpy as np
-from source.utils import reconstruct_2
+from utils import reconstruct_2
 from pickle import load, dump
 from tqdm import tqdm
-from source.wishart import Wishart
+from wishart import Wishart
 from runge_kutta import RungeKutta
 from itertools import product
 
