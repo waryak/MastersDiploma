@@ -161,25 +161,44 @@ class Wishart:
                         self.significant_clusters.add(oldest_cluster)
             self.G = np.append(arr=self.G, values=vertex)
 
-    def _form_cluster_centers(self, data):
-        cluster_centers = np.zeros(shape=(len(self.clusters_completenes), self.k + 1))
+    def _form_cluster_centers(self, data, reconstruction_shape):
+        """
+
+        :param data:
+        :return:
+        """
+        # TODO: Cluster centers MAKE SORTED!!!!! Because we need to choose their index
+        cluster_centers = np.zeros(shape=(len(self.clusters_completenes), reconstruction_shape))
         for cluster_index, cluster in enumerate(self.clusters_completenes):
             cluster_data = data[self.clusters == cluster]
             cluster_center = cluster_data.mean(axis=0)
             cluster_centers[cluster_index] = cluster_center
-        return cluster_centers
+        self.cluster_centers = cluster_centers
 
-    def _cluster_kdtree(self, n_lags, cluster_centers):
+    def _cluster_kdtree(self, n_lags):
         """
         """
-        lagged_data = cluster_centers[:, :n_lags]
-        return cKDTree(data=lagged_data)
+        lagged_data = self.cluster_centers[:, :n_lags]
+        centers_kdtree = cKDTree(data=lagged_data)
+        self.centers_kdtree = centers_kdtree
 
-    def predict(self, data, cluster_kdtree, cluster_centers):
+    def predict(self, data, epsilon=1, max_neighbors=100):
         """
         """
-        prediction_indexes, prediction_distances = cluster_kdtree.query(x=data, k=self.k + 2)
-        nearest_predictions_indexes = prediction_indexes[:, 1]
-        return cluster_centers[nearest_predictions_indexes]
+        distances, clusters = self.centers_kdtree.query(x=data, k=max_neighbors, distance_upper_bound=epsilon)
+        mask = ~np.isinf(distances)
+        distances = distances[mask]
+        clusters = clusters[mask]
+        if (len(distances) > 0) & (len(clusters) > 0):
+            distances = 1 / distances
+            prediction = np.average(a=self.cluster_centers[clusters, -1], weights=distances)
+        else:
+            # Data was not recognised as something predictable
+            prediction = np.nan
+        return prediction
+
+
+
+
 
 
