@@ -6,11 +6,7 @@ from wishart import Wishart
 from runge_kutta import RungeKutta
 from itertools import product
 import csv
-with open('eggs.csv', 'w', newline='') as csvfile:
-    spamwriter = csv.writer(csvfile, delimiter=' ',
-                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
-    spamwriter.writerow(['Spam'] * 5 + ['Baked Beans'])
-    spamwriter.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
+
 
 if __name__ == "__main__":
 
@@ -18,7 +14,7 @@ if __name__ == "__main__":
     # rk = RungeKutta(beta=8/3, rho=26, sigma=10, dt=0.1)
     # ts = rk.get_series(n_iterations=int(1e6))
 
-    n_of_neighbors = [9, 10, 11]
+    n_of_neighbors = [11]
     significance = [0.1, 0.05, 0.01, 0.005]
     combinations = list(product(n_of_neighbors, significance))
 
@@ -41,7 +37,7 @@ if __name__ == "__main__":
         ws._form_graph(m_d=m_d, m_i=m_i, v_s=v_s)
 
         path = "/home/vladenkov/MastersDiploma/data/"
-        ws_name = "wishart_model_" + str(k) + "_" + str(h) + ".pkl"
+        ws_name = "wishart_model_fixed" + str(k) + "_" + str(h) + ".pkl"
         path = path + ws_name
         with open(ws_name, "wb") as f:
             dump(ws, f)
