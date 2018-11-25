@@ -5,42 +5,45 @@ from scipy.spatial import cKDTree
 
 class Wishart:
     """
-    Implementation of wishart algorithm
+    Implementation of basic Wishart algorithm.
+    Using numpy and cKDTree from scipy
     """
 
     def __init__(self, k, h):
-        self.k = k
-        self.G = np.array([], dtype=int)
-        self.h = h
-        self.clusters_completenes = set()
-        self.significant_clusters = set()
+        self.k = k                         # Number of neighbors
+        self.G = np.array([], dtype=int)   # "Graph" array which stores all nodes.
+        self.h = h                         # Significance level
+        self.clusters_completness = set()  # Set of completed clusters
+        self.significant_clusters = set()  # Set of significant clusters
 
-    def _fit_kd_tree(self, data):
+    def _fit_kd_tree(self, z_vectors):
         """
-        Fit KDTree for z-vectors
-        :param data:
-        :return:
+        Fit cKDTree for z-vectors
+        :param z_vectors: z-vectors ndarray
+        :return: cKDTree
         """
-        kdt = cKDTree(data=data)
+        kdt = cKDTree(data=z_vectors)
         return kdt
 
     def _n_dim_ball_volume(self, radius):
         """
-        Calculates the volume of the ball
-        :param radius: the distance to the furthest neighbor
-        :return:
+        Calculates the volume of the ball around some point.
+        :param radius: the distance from initial z-vector to the furthest neighbor z-vector.
+        :return: volume of the ball.
         """
-
-        volume = (radius ** self.k) * (np.pi ** (self.k / 2)) / gamma(self.k / 2 + 1)
+        if hasattr(self, 'clusters'):
+            volume = (radius ** self.k) * (np.pi ** (self.k / 2)) / gamma(self.k / 2 + 1)
+        else:
+            raise Exception("Array for clusters storage was not created till now. Something is completly wrong")
         return self.k / self.clusters.shape[0] / volume
 
     def _check_cluster_significance(self, cluster, matrix_distances):
         """
-        Checks the cluster significance
-        :param cluster: number of cluster to check
+        Checks the cluster significance.
+        :param cluster: number of cluster to check.
         :param matrix_distances: matrix of distances
-        :return: Returns bool. True - if cluster is significant and was added to the list.
-                               False - if cluster is not significant and was not added to the list.
+        :return: Returns bool. True - if cluster is significant and needs to be added to the list of significant.
+                               False - if cluster is not significant doesn't need to be added to the list.
         """
         assert cluster in self.clusters, "There is no presence of cluster %i in the graph yet" %cluster
         verticies_radiuses = matrix_distances[self.clusters == cluster][:, self.k - 1]
@@ -54,18 +57,18 @@ class Wishart:
         else:
             return False
 
-    def _construct_neighbors_matrix(self, data, kdtree):
+    def _construct_neighbors_matrix(self, z_vectors, kdtree):
         """
-
-        :param data:
-        :param kdtree:
+        Construct ndarray to store neighbor matrix
+        :param z_vectors: Ndarray of z-vectors.
+        :param kdtree: cKDTree, fitted on z-vectors.
         :return:
         """
-        zvector_neighbors_distances = np.zeros(shape=(data.shape[0], self.k))
-        zvector_neighbors_indexes = np.empty(shape=(data.shape[0], self.k))
-        self.clusters = np.zeros(data.shape[0], dtype=int)
-        for index, zvector in enumerate(data):
-            zvector_neighbors_dist, zvector_neighbors_ind = kdtree.query(x=zvector, k=self.k + 1)
+        zvector_neighbors_distances = np.zeros(shape=(z_vectors.shape[0], self.k))
+        zvector_neighbors_indexes = np.empty(shape=(z_vectors.shape[0], self.k))
+        self.clusters = np.zeros(z_vectors.shape[0], dtype=int)
+        for index, z_vector in enumerate(z_vectors):
+            zvector_neighbors_dist, zvector_neighbors_ind = kdtree.query(x=z_vector, k=self.k + 1)
             zvector_neighbors_distances[index] = zvector_neighbors_dist[1:]
             zvector_neighbors_indexes[index] = zvector_neighbors_ind[1:]
         # sort matrix by ascending of the distance to the furthest NN
@@ -74,20 +77,20 @@ class Wishart:
         matrix_indexes_sorted = zvector_neighbors_indexes[vertecies_sorted]
         return matrix_distances_sorted, matrix_indexes_sorted, vertecies_sorted
 
-    def _form_new_cluster(self, vertex):
+    def _form_new_cluster(self, zvector_index):
         """
         Forms a new cluster out of a new vertex
-        :param vertex:
-        :return: number of cluster
+        :param zvector_index: index of z-vector, which i going to be assigned as a new cluster
+        :return: Number of cluster
         """
         max_cluster = self.clusters.max() + 1
-        self.clusters[vertex] = max_cluster
+        self.clusters[zvector_index] = max_cluster
         return max_cluster
 
     def _find_connections(self, vertex, vertex_neighbors, matrix_indecies):
         """
-        Finds all connection of this vertex in a graph.
-        :param vertex: vertex we want to find connections for.
+        Finds all connection of vertex in a graph.
+        :param vertex: vertex(z-vector) we want to find connections for.
         :param vertex_neighbors: a list of vertex neighbors.
         :param matrix_indexes: a matrix of all neighbors indexes for each vertex
         :return: vertex_to_g_connections - array of vertex indexes which are connected to the current vertex
@@ -134,14 +137,18 @@ class Wishart:
                 # If all connections are completed cluster, than assign vertex to zero
                 if all(map(lambda x: x in self.clusters_completenes, unique_clusters)):
                     self.clusters[vertex] = 0
-                # If one of the clusters is zero, or there are more than one significant clusters,
-                # then assign new vertex to zero
+                # If one of the clusters is zero, or there are more than one significant clusters, then
+                # 1. assign new vertex to zero and
+                # 2. significant clusters -> completed clusters and
+                # 3. delete insignificant clusters
                 elif (min(unique_clusters) == 0) | \
                      (len(unique_clusters.intersection(self.significant_clusters)) > 1):
                     self.clusters[vertex] = 0
                     insignificant_to_zero = unique_clusters.difference(self.significant_clusters)
                     significant_to_completed = unique_clusters.intersection(self.significant_clusters)
                     self.clusters_completenes = self.clusters_completenes.union(significant_to_completed)
+                    # Clusters, which became completed are not significant any more, so exclude them
+                    self.significant_clusters = self.significant_clusters.difference(significant_to_completed)
                     for cluster in insignificant_to_zero:
                         self.clusters[self.clusters == cluster] = 0
                 # If there is one or less significant class and no zero classes,
@@ -155,6 +162,8 @@ class Wishart:
                     unique_clusters = unique_clusters.difference(self.clusters_completenes)
                     other_clusters = sorted(list(unique_clusters))[1:]
                     for cluster in other_clusters:
+                        # If we collapse a significant cluster, we should exclude it from the set
+                        self.significant_clusters = self.significant_clusters.difference(set([cluster]))
                         self.clusters[self.clusters == cluster] = oldest_cluster
                     self.clusters[vertex] = oldest_cluster
                     if self._check_cluster_significance(cluster=oldest_cluster, matrix_distances=m_d):
