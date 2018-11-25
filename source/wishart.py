@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from scipy.special import gamma
 from scipy.spatial import distance
@@ -15,6 +16,14 @@ class Wishart:
         self.h = h                         # Significance level
         self.clusters_completness = set()  # Set of completed clusters
         self.significant_clusters = set()  # Set of significant clusters
+
+        self.profile_connections = []
+        self.profile_new_cluster = []
+        self.profile_1_connection = []
+        self.profile_3_1 = []
+        self.profile_3_2 = []
+        self.profile_3_3 = []
+
 
     def _fit_kd_tree(self, z_vectors):
         """
@@ -112,16 +121,23 @@ class Wishart:
         """
         """
         for vertex, vertex_neighbors in zip(v_s, m_i):
+            t1 = time.time()
             _, vertex_connections_clusters = self._find_connections(vertex=vertex,
                                                                     vertex_neighbors=vertex_neighbors,
                                                                     matrix_indecies=m_i)
             unique_clusters = set(vertex_connections_clusters)
+            t2 = time.time()
+            self.profile_connections.append(t2 - t1)
 
             # Check if vertex is isolated
             if len(unique_clusters) == 0:
-                _ = self._form_new_cluster(vertex=vertex)
+                t1 = time.time()
+                _ = self._form_new_cluster(zvector_index=vertex)
+                t2 = time.time()
+                self.profile_new_cluster.append(t2 - t1)
             # If vertex has only connection to one cluster, then:
             elif len(unique_clusters) == 1:
+                t1 = time.time()
                 connection_cluster = list(unique_clusters)[0]
                 # If cluster is already completed
                 if connection_cluster in self.clusters_completenes:
@@ -132,17 +148,24 @@ class Wishart:
                     if self._check_cluster_significance(connection_cluster, m_d):
                         # Add cluster to list of significant clusters
                         self.significant_clusters.add(connection_cluster)
+                t2 = time.time()
+                self.profile_1_connection.append(t2 - t1)
+
             # If vertex is connected to more than one clusters/vertcies
             else:
                 # If all connections are completed cluster, than assign vertex to zero
                 if all(map(lambda x: x in self.clusters_completenes, unique_clusters)):
+                    t1 = time.time()
                     self.clusters[vertex] = 0
+                    t2 = time.time()
+                    self.profile_3_1.append(t2 - t1)
                 # If one of the clusters is zero, or there are more than one significant clusters, then
                 # 1. assign new vertex to zero and
                 # 2. significant clusters -> completed clusters and
                 # 3. delete insignificant clusters
                 elif (min(unique_clusters) == 0) | \
                      (len(unique_clusters.intersection(self.significant_clusters)) > 1):
+                    t1 = time.time()
                     self.clusters[vertex] = 0
                     insignificant_to_zero = unique_clusters.difference(self.significant_clusters)
                     significant_to_completed = unique_clusters.intersection(self.significant_clusters)
@@ -151,24 +174,35 @@ class Wishart:
                     self.significant_clusters = self.significant_clusters.difference(significant_to_completed)
                     for cluster in insignificant_to_zero:
                         self.clusters[self.clusters == cluster] = 0
+                    t2 = time.time()
+                    self.profile_3_2(t2 - t1)
                 # If there is one or less significant class and no zero classes,
                 # then we should collapse all clusters including new-coming node
                 # to the oldest cluster(oldest means that it has the biggest density)
                 # TODO: Think of the oprimisation in "CONNECTION SEARCH"
                 # TODO: DO NOT COLLAPSE ALL CLUSTERS. DO NOT TOUCH COMPLETED CLUSTERS!
                 else:
+                    t1 = time.time()
                     oldest_cluster = min(unique_clusters)
                     # Exclude completed clusters
                     unique_clusters = unique_clusters.difference(self.clusters_completenes)
                     other_clusters = sorted(list(unique_clusters))[1:]
                     for cluster in other_clusters:
                         # If we collapse a significant cluster, we should exclude it from the set
-                        self.significant_clusters = self.significant_clusters.difference(set([cluster]))
+                        self.significant_clusters = self.significant_clusters.difference({cluster})
                         self.clusters[self.clusters == cluster] = oldest_cluster
                     self.clusters[vertex] = oldest_cluster
                     if self._check_cluster_significance(cluster=oldest_cluster, matrix_distances=m_d):
                         self.significant_clusters.add(oldest_cluster)
+                    t2 = time.time()
+                    self.profile_3_3.append(t2 - t1)
             self.G = np.append(arr=self.G, values=vertex)
+        self.profile_connections = np.array(self.profile_connections)
+        self.profile_new_cluster = np.array(self.profile_new_cluster)
+        self.profile_1_connection = np.array(self.profile_1_connection)
+        self.profile_3_1 = np.array(self.profile_3_1)
+        self.profile_3_2 = np.array(self.profile_3_2)
+        self.profile_3_3 = np.array(self.profile_3_3)
 
     def _form_cluster_centers(self, data, reconstruction_shape):
         """

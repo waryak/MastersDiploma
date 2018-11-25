@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from utils import reconstruct_2
 from pickle import load, dump
@@ -5,6 +6,7 @@ from tqdm import tqdm
 from wishart import Wishart
 from runge_kutta import RungeKutta
 from itertools import product
+
 import csv
 
 
@@ -31,8 +33,11 @@ if __name__ == "__main__":
         h = combination[1]
         print("Number of neighbors:", k, "and significance:", h)
         ws = Wishart(k=k, h=h)
+        t1 = time.time()
         kdt = ws._fit_kd_tree(z_vectors=reconstructed_ts)
+        t2 = time.time()
         m_d, m_i, v_s = ws._construct_neighbors_matrix(z_vectors=reconstructed_ts, kdtree=kdt)
+        t3 = time.time()
         m_i = m_i.astype(int)
         ws._form_graph(m_d=m_d, m_i=m_i, v_s=v_s)
 
@@ -41,6 +46,7 @@ if __name__ == "__main__":
         path = path + ws_name
         with open(path, "wb") as f:
             dump(ws, f)
+        print("Time:", t1, t2, t3)
 
         kdt.query()
 
