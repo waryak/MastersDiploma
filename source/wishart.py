@@ -14,7 +14,7 @@ class Wishart:
         self.k = k                         # Number of neighbors
         self.G = np.array([], dtype=int)   # "Graph" array which stores all nodes.
         self.h = h                         # Significance level
-        self.clusters_completness = set()  # Set of completed clusters
+        self.clusters_completenes = set()  # Set of completed clusters
         self.significant_clusters = set()  # Set of significant clusters
 
         self.profile_connections = []
