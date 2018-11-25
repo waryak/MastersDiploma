@@ -175,7 +175,7 @@ class Wishart:
                     for cluster in insignificant_to_zero:
                         self.clusters[self.clusters == cluster] = 0
                     t2 = time.time()
-                    self.profile_3_2(t2 - t1)
+                    self.profile_3_2.append(t2 - t1)
                 # If there is one or less significant class and no zero classes,
                 # then we should collapse all clusters including new-coming node
                 # to the oldest cluster(oldest means that it has the biggest density)
