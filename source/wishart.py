@@ -1,8 +1,13 @@
 import time
 import numpy as np
+from pickle import dump
 from scipy.special import gamma
-from scipy.spatial import distance
+from multiprocessing import Pool
 from scipy.spatial import cKDTree
+from pathlib import PurePosixPath
+
+
+# TODO: WISHART NEEDS HELP!!!!
 
 class Wishart:
     """
@@ -16,14 +21,6 @@ class Wishart:
         self.h = h                         # Significance level
         self.clusters_completenes = set()  # Set of completed clusters
         self.significant_clusters = set()  # Set of significant clusters
-
-        self.profile_connections = []
-        self.profile_new_cluster = []
-        self.profile_1_connection = []
-        self.profile_3_1 = []
-        self.profile_3_2 = []
-        self.profile_3_3 = []
-
 
     def _fit_kd_tree(self, z_vectors):
         """
@@ -121,23 +118,16 @@ class Wishart:
         """
         """
         for vertex, vertex_neighbors in zip(v_s, m_i):
-            t1 = time.time()
             _, vertex_connections_clusters = self._find_connections(vertex=vertex,
                                                                     vertex_neighbors=vertex_neighbors,
                                                                     matrix_indecies=m_i)
             unique_clusters = set(vertex_connections_clusters)
-            t2 = time.time()
-            self.profile_connections.append(t2 - t1)
 
             # Check if vertex is isolated
             if len(unique_clusters) == 0:
-                t1 = time.time()
                 _ = self._form_new_cluster(zvector_index=vertex)
-                t2 = time.time()
-                self.profile_new_cluster.append(t2 - t1)
             # If vertex has only connection to one cluster, then:
             elif len(unique_clusters) == 1:
-                t1 = time.time()
                 connection_cluster = list(unique_clusters)[0]
                 # If cluster is already completed
                 if connection_cluster in self.clusters_completenes:
@@ -148,24 +138,18 @@ class Wishart:
                     if self._check_cluster_significance(connection_cluster, m_d):
                         # Add cluster to list of significant clusters
                         self.significant_clusters.add(connection_cluster)
-                t2 = time.time()
-                self.profile_1_connection.append(t2 - t1)
 
             # If vertex is connected to more than one clusters/vertcies
             else:
                 # If all connections are completed cluster, than assign vertex to zero
                 if all(map(lambda x: x in self.clusters_completenes, unique_clusters)):
-                    t1 = time.time()
                     self.clusters[vertex] = 0
-                    t2 = time.time()
-                    self.profile_3_1.append(t2 - t1)
                 # If one of the clusters is zero, or there are more than one significant clusters, then
                 # 1. assign new vertex to zero and
                 # 2. significant clusters -> completed clusters and
                 # 3. delete insignificant clusters
                 elif (min(unique_clusters) == 0) | \
                      (len(unique_clusters.intersection(self.significant_clusters)) > 1):
-                    t1 = time.time()
                     self.clusters[vertex] = 0
                     insignificant_to_zero = unique_clusters.difference(self.significant_clusters)
                     significant_to_completed = unique_clusters.intersection(self.significant_clusters)
@@ -174,15 +158,12 @@ class Wishart:
                     self.significant_clusters = self.significant_clusters.difference(significant_to_completed)
                     for cluster in insignificant_to_zero:
                         self.clusters[self.clusters == cluster] = 0
-                    t2 = time.time()
-                    self.profile_3_2.append(t2 - t1)
                 # If there is one or less significant class and no zero classes,
                 # then we should collapse all clusters including new-coming node
                 # to the oldest cluster(oldest means that it has the biggest density)
                 # TODO: Think of the oprimisation in "CONNECTION SEARCH"
                 # TODO: DO NOT COLLAPSE ALL CLUSTERS. DO NOT TOUCH COMPLETED CLUSTERS!
                 else:
-                    t1 = time.time()
                     oldest_cluster = min(unique_clusters)
                     # Exclude completed clusters
                     unique_clusters = unique_clusters.difference(self.clusters_completenes)
@@ -194,26 +175,22 @@ class Wishart:
                     self.clusters[vertex] = oldest_cluster
                     if self._check_cluster_significance(cluster=oldest_cluster, matrix_distances=m_d):
                         self.significant_clusters.add(oldest_cluster)
-                    t2 = time.time()
-                    self.profile_3_3.append(t2 - t1)
             self.G = np.append(arr=self.G, values=vertex)
-        self.profile_connections = np.array(self.profile_connections)
-        self.profile_new_cluster = np.array(self.profile_new_cluster)
-        self.profile_1_connection = np.array(self.profile_1_connection)
-        self.profile_3_1 = np.array(self.profile_3_1)
-        self.profile_3_2 = np.array(self.profile_3_2)
-        self.profile_3_3 = np.array(self.profile_3_3)
 
-    def _form_cluster_centers(self, data, reconstruction_shape):
+
+    def _form_cluster_centers(self, data):
         """
 
         :param data:
+        :param reconstruction_shape:
         :return:
         """
         # TODO: Cluster centers MAKE SORTED!!!!! Because we need to choose their index
-        cluster_centers = np.zeros(shape=(len(self.clusters_completenes), reconstruction_shape))
+        cluster_centers = np.zeros(shape=(len(self.clusters_completenes), data.shape[1]))
         for cluster_index, cluster in enumerate(self.clusters_completenes):
+
             cluster_data = data[self.clusters == cluster]
+            print("CLUSTERS", cluster, cluster_data.shape)
             cluster_center = cluster_data.mean(axis=0)
             cluster_centers[cluster_index] = cluster_center
         self.cluster_centers = cluster_centers
@@ -222,6 +199,7 @@ class Wishart:
         """
         """
         lagged_data = self.cluster_centers[:, :n_lags]
+        print("LAGGED DATA: ",lagged_data.shape)
         centers_kdtree = cKDTree(data=lagged_data)
         self.centers_kdtree = centers_kdtree
 
@@ -240,8 +218,113 @@ class Wishart:
             prediction = np.nan
         return prediction
 
+class ParallelWishart:
+    """
+    Parallelisation of Wishart algorithm
+    """
+    def __init__(self, MODEL_PATH: PurePosixPath, k: int, h: float , n_processes: int=2):
+        self.k = k
+        self.h = h
+        self.n_processes = n_processes
+        self.pool = Pool(processes=n_processes)
+        self.MODEL_PATH = MODEL_PATH
 
 
+    def __getstate__(self):
+        """
+        This function defines the fields of the class to be pickled.
+        :return: All class fields except for "pool". It cannot be serialized.
+        """
+        self_dict = self.__dict__.copy()
+        del self_dict["pool"]
+        return self_dict
+
+    def _run_single_wishart(self, args):
+        """
+
+        :param args:
+        :return: path to the saved model
+        """
+        ws = Wishart(k=self.k, h=self.h)
+        print("--> Fitting KDTree")
+        kdt = ws._fit_kd_tree(z_vectors=args["z_vectors"])
+        print("--> Constructing vertex data")
+        m_d, m_i, v_s = ws._construct_neighbors_matrix(z_vectors=args["z_vectors"], kdtree=kdt)
+        m_i = m_i.astype(int)
+        print("--> Fitting the graph")
+        ws._form_graph(m_d=m_d, m_i=m_i, v_s=v_s)
+        print("--> Finding the cluster centers")
+        ws._form_cluster_centers(data=m_d)
+        print("--> Fitting clusters KDTree")
+        ws._cluster_kdtree(n_lags=args["n_lags"])
+        path = self.MODEL_PATH / args["model_name"]
+        with open(path, "wb") as f:
+            dump(ws, f)
+        return path
+
+    def run_wishart(self, list_of_args):
+        """
+        Function, running a pool of wishart processes
+        :param list_of_args: a list of argument dictionaries
+        :return:
+        """
+        assert self.n_processes == len(list_of_args), "Number of processes is %d, but number of arguments is %d" %(self.n_processes, len(list_of_args))
 
 
+        if self.n_processes == 1:
+            print("Running single process mode")
+            path = self._run_single_wishart(list_of_args[0])
+            return path
+        else:
+            print("Running on %d processors" %self.n_processes)
+            paths = self.pool.map(func=self._run_single_wishart, iterable=list_of_args)
+            return paths
 
+
+class ParallelWishart2(Wishart):
+    """
+    Parallelisation of Wishart algorithm
+    """
+    def __init__(self, MODEL_PATH: PurePosixPath, k: int, h: float , n_processes: int=2):
+        self.k = k
+        self.h = h
+        self.n_processes = n_processes
+        self.pool = Pool(processes=n_processes)
+
+    def fun(self):
+        r = super.__init__()
+        return r
+
+
+    def _run_single_wishart(self, **args):
+        """
+
+        :param args:
+        :return: path to the saved model
+        """
+        ws = Wishart(k=self.k, h=self.h)
+        kdt = ws._fit_kd_tree(z_vectors=args["z_vectors"])
+        m_d, m_i, v_s = ws._construct_neighbors_matrix(z_vectors=args["z_vectors"], kdtree=kdt)
+        m_i = m_i.astype(int)
+        ws._form_graph(m_d=m_d, m_i=m_i, v_s=v_s)
+        path = self.MODEL_PATH / args["model_name"]
+        with open(path, "wb") as f:
+            dump(ws, f)
+        return path
+
+
+    def run_wishart(self, list_of_args):
+        """
+        Function, running a pool of wishart processes
+        :param list_of_args: a list of argument dictionaries
+        :return:
+        """
+        assert self.n_processes == len(list_of_args), "Number of processes is %d, but number of arguments " \
+                                                      "is %d" (self.n_processes, len(list_of_args))
+
+        if self.n_processes == 1:
+            path = self._run_single_wishart(list_of_args[0])
+            return path
+        else:
+            paths = self.pool.map(func=self._run_single_wishart, iterable=list_of_args)
+            return paths
