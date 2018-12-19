@@ -1,0 +1,82 @@
+version: '3.7'
+services:
+  wishart-worker:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.worker
+    volumes:
+      - type: bind
+        source: /Users/waryak/Documents/HSE/MastersDiploma
+        target: /src
+
+
+
+
+
+
+#
+#version: '3.2'
+#services:
+#    app:
+#      build:
+#        context: .
+#        dockerfile: dockerfiles/Dockerfile.app
+#      ports:
+#        - "5000:5000"
+#      links:
+#        - rq-redis
+#      environment:
+#        RQ_REDIS: redis://rq-redis
+#        SERVING_REST_HOST: serving
+#        SERVING_REST_PORT: 8501
+#    worker:
+#      build:
+#        context: .
+#        dockerfile: dockerfiles/Dockerfile.worker
+#        args:
+#          TF_IMAGE_VERSION: ${TF_VERSION}
+#      volumes:
+#        - type: volume
+#          source: vision-data
+#          target: /var/vision
+#      environment:
+#        RQ_REDIS: redis://rq-redis
+#        SERVING_HOST: serving
+#        SERVING_PORT: 9000
+#        STATSD_HOST: statsd-sl.ostrovok.in
+#        VISION_WORKERS: 2
+#      links:
+#        - rq-redis
+#        - serving
+#    rq-redis:
+#      image: "redis:alpine"
+#      ports:
+#        - "6379:6379"
+#    serving:
+#      build:
+#        context: .
+#        dockerfile: dockerfiles/Dockerfile.serving
+#        args:
+#          SERVING_VERSION: ${SERVING_VERSION}
+#      ports:
+#        - "9000:9000"
+#        - "8501:8501"
+#      environment:
+#        - MODEL_NAME=vision_content_tags
+#        - MAX_BATCH_SIZE
+#      volumes:
+#        - type: volume
+#          source: serving-models
+#          target: /models
+#    rq-dashboard:
+#      image: "godber/rq-dashboard:latest"
+#      ports:
+#        - "9222:9222"
+#      links:
+#        - rq-redis
+#      environment:
+#        - REDIS_URL=redis://rq-redis
+#      command: ['rq-dashboard', '-p', '9222', '-H', 'rq-redis']
+#volumes:
+#  vision-data:
+#  serving-models:
