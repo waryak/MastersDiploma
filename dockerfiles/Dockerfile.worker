@@ -4,11 +4,9 @@ MAINTAINER "Vladislav Ladenkov <waryak2012@mail.ru>"
 WORKDIR /
 
 COPY src/algo ./src/algo
-COPY config.yml ./src/algo
-ENV CONFIG algo/config.yml
+ENV CONFIG /mnt/configs/config.yml
 
 WORKDIR /src
-
 ENTRYPOINT ["python3", "-m", "algo.main"]
 
 

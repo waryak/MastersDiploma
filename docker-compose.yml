@@ -1,18 +1,83 @@
 version: '3.7'
 services:
-  wishart-worker:
-    build:
-      context: .
-      dockerfile: dockerfiles/Dockerfile.worker
-    volumes:
-      - type: bind
-        source: /Users/waryak/Documents/HSE/MastersDiploma
-        target: /src
+
+    rabbit:
+      hostname: rabbit
+      image: e8261c2af9fe
+      environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=mypass
+      ports:
+      - "5672:5672"
+
+    wishart-producer:
+        build:
+          context: .
+          dockerfile: dockerfiles/Dockerfile.producer
+        volumes:
+          - .:/app
+        links:
+          - rabbit
+        depends_on:
+          - rabbit
+# TODO: Restart always
+# TODO: Read only volumes
+    wishart-worker:
+        build:
+          context: .
+          dockerfile: dockerfiles/Dockerfile.worker
+        volumes:
+        - type: bind
+          source: ./configs
+          target: /mnt/configs
 
 
 
 
 
+    database:
+        hostname: mongo
+        image: mongo:latest
+        ports:
+        - "27018:27017"
+
+
+######################################################################
+
+
+
+#version: '2'
+#services:
+#    rabbit:
+#        hostname: rabbit
+#        image: rabbitmq:latest
+#        environment:
+#            - RABBITMQ_DEFAULT_USER=admin
+#            - RABBITMQ_DEFAULT_PASS=mypass
+#        ports:
+#            - "5672:5672"
+#
+#    worker:
+#        build:
+#            context: .
+#            dockerfile: dockerfile
+#        volumes:
+#            - .:/app
+#        links:
+#            - rabbit
+#        depends_on:
+#            - rabbit
+#
+#    database:
+#        hostname: mongo
+#        image: mongo:latest
+#        ports:
+#            - "27018:27017"
+
+
+
+
+######################################################################
 
 #
 #version: '3.2'

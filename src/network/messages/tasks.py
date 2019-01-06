@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from network.celery.celery import app
+from network.messages.celery import app
 import time
 import datetime as dt
 from pymongo import MongoClient
