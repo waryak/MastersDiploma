@@ -16,9 +16,9 @@ class Wishart:
     """
 
     def __init__(self, k, h):
-        self.k = k                         # Number of neighbors
-        self.G = np.array([], dtype=int)   # "Graph" array which stores all nodes.
-        self.h = h                         # Significance level
+        self.k = k  # Number of neighbors
+        self.G = np.array([], dtype=int)  # "Graph" array which stores all nodes.
+        self.h = h  # Significance level
         self.clusters_completenes = set()  # Set of completed clusters
         self.significant_clusters = set()  # Set of significant clusters
 
@@ -51,7 +51,7 @@ class Wishart:
         :return: Returns bool. True - if cluster is significant and needs to be added to the list of significant.
                                False - if cluster is not significant doesn't need to be added to the list.
         """
-        assert cluster in self.clusters, "There is no presence of cluster %i in the graph yet" %cluster
+        assert cluster in self.clusters, "There is no presence of cluster %i in the graph yet" % cluster
         verticies_radiuses = matrix_distances[self.clusters == cluster][:, self.k - 1]
         vertex_with_biggest_radius = max(verticies_radiuses)
         vertex_with_smalles_radius = min(verticies_radiuses)
@@ -149,7 +149,7 @@ class Wishart:
                 # 2. significant clusters -> completed clusters and
                 # 3. delete insignificant clusters
                 elif (min(unique_clusters) == 0) | \
-                     (len(unique_clusters.intersection(self.significant_clusters)) > 1):
+                        (len(unique_clusters.intersection(self.significant_clusters)) > 1):
                     self.clusters[vertex] = 0
                     insignificant_to_zero = unique_clusters.difference(self.significant_clusters)
                     significant_to_completed = unique_clusters.intersection(self.significant_clusters)
@@ -177,7 +177,6 @@ class Wishart:
                         self.significant_clusters.add(oldest_cluster)
             self.G = np.append(arr=self.G, values=vertex)
 
-
     def _form_cluster_centers(self, data):
         """
 
@@ -188,7 +187,6 @@ class Wishart:
         # TODO: Cluster centers MAKE SORTED!!!!! Because we need to choose their index
         cluster_centers = np.zeros(shape=(len(self.clusters_completenes), data.shape[1]))
         for cluster_index, cluster in enumerate(self.clusters_completenes):
-
             cluster_data = data[self.clusters == cluster]
             print("CLUSTERS", cluster, cluster_data.shape)
             cluster_center = cluster_data.mean(axis=0)
@@ -199,7 +197,7 @@ class Wishart:
         """
         """
         lagged_data = self.cluster_centers[:, :n_lags]
-        print("LAGGED DATA: ",lagged_data.shape)
+        print("LAGGED DATA: ", lagged_data.shape)
         centers_kdtree = cKDTree(data=lagged_data)
         self.centers_kdtree = centers_kdtree
 
@@ -218,17 +216,18 @@ class Wishart:
             prediction = np.nan
         return prediction
 
+
 class ParallelWishart:
     """
     Parallelisation of Wishart algorithm
     """
-    def __init__(self, MODEL_PATH: PurePosixPath, k: int, h: float , n_processes: int=2):
+
+    def __init__(self, MODEL_PATH: PurePosixPath, k: int, h: float, n_processes: int = 2):
         self.k = k
         self.h = h
         self.n_processes = n_processes
         self.pool = Pool(processes=n_processes)
         self.MODEL_PATH = MODEL_PATH
-
 
     def __getstate__(self):
         """
@@ -268,15 +267,15 @@ class ParallelWishart:
         :param list_of_args: a list of argument dictionaries
         :return:
         """
-        assert self.n_processes == len(list_of_args), "Number of processes is %d, but number of arguments is %d" %(self.n_processes, len(list_of_args))
-
+        assert self.n_processes == len(list_of_args), "Number of processes is %d, but number of arguments is %d" % (
+        self.n_processes, len(list_of_args))
 
         if self.n_processes == 1:
             print("Running single process mode")
             path = self._run_single_wishart(list_of_args[0])
             return path
         else:
-            print("Running on %d processors" %self.n_processes)
+            print("Running on %d processors" % self.n_processes)
             paths = self.pool.map(func=self._run_single_wishart, iterable=list_of_args)
             return paths
 
@@ -285,7 +284,8 @@ class ParallelWishart2(Wishart):
     """
     Parallelisation of Wishart algorithm
     """
-    def __init__(self, MODEL_PATH: PurePosixPath, k: int, h: float , n_processes: int=2):
+
+    def __init__(self, MODEL_PATH: PurePosixPath, k: int, h: float, n_processes: int = 2):
         self.k = k
         self.h = h
         self.n_processes = n_processes
@@ -294,7 +294,6 @@ class ParallelWishart2(Wishart):
     def fun(self):
         r = super.__init__()
         return r
-
 
     def _run_single_wishart(self, **args):
         """
@@ -312,7 +311,6 @@ class ParallelWishart2(Wishart):
             dump(ws, f)
         return path
 
-
     def run_wishart(self, list_of_args):
         """
         Function, running a pool of wishart processes
@@ -320,7 +318,7 @@ class ParallelWishart2(Wishart):
         :return:
         """
         assert self.n_processes == len(list_of_args), "Number of processes is %d, but number of arguments " \
-                                                      "is %d" (self.n_processes, len(list_of_args))
+                                                      "is %d"(self.n_processes, len(list_of_args))
 
         if self.n_processes == 1:
             path = self._run_single_wishart(list_of_args[0])

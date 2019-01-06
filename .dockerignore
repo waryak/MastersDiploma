@@ -140,4 +140,12 @@ pip-selfcheck.json
 # End of https://www.gitignore.io/api/python,jupyternotebook
 data
 
+dockerfiles
 source/data
+docs
+data
+lab1
+papers
+MyTries.ipynb
+Profiling.ipynb
+ts10e6.csv

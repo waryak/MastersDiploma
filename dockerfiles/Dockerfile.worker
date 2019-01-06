@@ -1,0 +1,12 @@
+FROM continuumio/anaconda3:latest
+MAINTAINER "Vladislav Ladenkov <waryak2012@mail.ru>"
+
+WORKDIR /
+
+COPY src/algo ./src/algo
+ENV CONFIG /mnt/configs/config.yml
+
+WORKDIR /src
+ENTRYPOINT ["python3", "-m", "algo.main"]
+
+
