@@ -30,16 +30,21 @@ services:
         - type: bind
           source: ./configs
           target: /mnt/configs
-
-
-
-
+        - type: volume
+          source: wishart-data
+          target: /var/data
 
     database:
         hostname: mongo
         image: mongo:latest
         ports:
         - "27018:27017"
+
+volumes:
+    wishart-data:
+
+
+
 
 
 ######################################################################

@@ -20,8 +20,9 @@ if __name__ == "__main__":
 
 
     CONFIG_DATA_GENERATE = configs["data"]["generate"]
-    CONFIG_DATA_PATH_TO_TS = PurePosixPath(configs["data"]["path_to_ts"])
-    CONFIG_DATA_PATH_TO_MODELS = PurePosixPath(configs["data"]["path_to_models"])
+    CONFIG_MOUNT_POINT = PurePosixPath(configs["data"]["mount_point"])
+    CONFIG_DATA_PATH_TO_TS = CONFIG_MOUNT_POINT / configs["data"]["path_to_ts"]
+    CONFIG_DATA_PATH_TO_MODELS = CONFIG_MOUNT_POINT / configs["data"]["path_to_models"]
 
     N_PROCESSES = configs["algorithm"]["parameters"]["n_processes"]
     WISHART_NEIGHBORS = configs["algorithm"]["parameters"]["wishart_neighbors"]
@@ -34,11 +35,17 @@ if __name__ == "__main__":
     TEMPLATE_INDEX_STEP = configs["algorithm"]["templates"]["template_index_step"]
     TEMPLATE_MAX_DISTANCE = configs["algorithm"]["templates"]["template_max_distance"]
 
-    print("------------------- GENERATE OR LOAD DATA -------------------")
+    if not path.exists(CONFIG_DATA_PATH_TO_TS.as_posix()):
+        print("> Creating directories for time-series data! (ATTENTION HERE)")
+        makedirs(CONFIG_DATA_PATH_TO_TS.as_posix())
+    if not path.exists(CONFIG_DATA_PATH_TO_MODELS.as_posix()):
+        print("> Creating directories for models data! (ATTENTION HERE)")
+        makedirs(CONFIG_DATA_PATH_TO_MODELS.as_posix())
 
+    print("------------------- GENERATE OR LOAD DATA -------------------")
     if CONFIG_DATA_GENERATE:
         rk = RungeKutta(beta=8 / 3, rho=28, sigma=10, dt=0.1)
-        ts = rk.get_series(n_iterations=int(1e6))
+        ts = rk.get_series(n_iterations=int(3e6))
         CONFIG_DATA_PATH_TO_TS = CONFIG_DATA_PATH_TO_TS / "ts28.npy"
         with open(CONFIG_DATA_PATH_TO_TS.as_posix(), "wb") as f:
             np.save(file=f, arr=ts)
@@ -70,7 +77,7 @@ if __name__ == "__main__":
             print("--> Models storage already exist. Be sure everything is under control")
         else:
             print("--> Creating folder to store models for the first time.")
-            makedirs(path=CONFIG_DATA_PATH_TO_MODELS.as_posix())
+            makedirs(CONFIG_DATA_PATH_TO_MODELS.as_posix())
         pw = ParallelWishart(MODEL_PATH=CONFIG_DATA_PATH_TO_MODELS,
                              k=WISHART_NEIGHBORS,
                              h=WISHART_SIGNIFICANCE,
