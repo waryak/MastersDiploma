@@ -1,14 +1,19 @@
-FROM continuumio/anaconda3:latest
+FROM python:3.6
 MAINTAINER "Vladislav Ladenkov <waryak2012@mail.ru>"
 
 WORKDIR /
 
+ENV CONFIG /mnt/configs/config.yml
+
 COPY src/network/messages /src/network/messages
 COPY requirements.txt /requirements.txt
+
+RUN pip install --upgrade pip
 RUN pip install -r /requirements.txt
 
 WORKDIR /src/network
 
-#ENTRYPOINT ["python3", "-m", "messages.run_tasks"]
+ENTRYPOINT ["python3", "-m", "messages.run_tasks"]
+
 
 

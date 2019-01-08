@@ -1,20 +1,20 @@
 data:
-    generate: True
-    mount_point: "var/data"
-    path_to_ts: "data_ts"
-    path_to_models: "data_clusters"
+  generate: True
+  mount_point: "var/data"
+  path_to_ts: "data_ts"
+  path_to_models: "data_clusters"
 
 algorithm:
-    parameters:
-        n_processes: 2
-        wishart_neighbors: 11
-        wishart_significance: 0.1
-        reconstruction_dimension: 5
-    templates:
-      template_start_index: 0
-      template_end_intex: 2
-      template_index_step: 1
-      template_max_distance: 10
+  parameters:
+    n_processes: 2
+    wishart_neighbors: 11
+    wishart_significance: 0.1
+    reconstruction_dimension: 5
+  templates:
+    template_start_index: 0
+    template_end_intex: 2
+    template_index_step: 1
+    template_max_distance: 10
 
 runtime:
     continue_pool_work: False

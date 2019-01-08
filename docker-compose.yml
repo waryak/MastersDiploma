@@ -3,7 +3,7 @@ services:
 
     rabbit:
       hostname: rabbit
-      image: e8261c2af9fe
+      image: rabbitmq:latest
       environment:
       - RABBITMQ_DEFAULT_USER=admin
       - RABBITMQ_DEFAULT_PASS=mypass
@@ -14,12 +14,15 @@ services:
         build:
           context: .
           dockerfile: dockerfiles/Dockerfile.producer
+        env_file:
+          -  configs/variables.env
         volumes:
           - .:/app
         links:
           - rabbit
         depends_on:
           - rabbit
+
 # TODO: Restart always
 # TODO: Read only volumes
     wishart-worker:
@@ -50,7 +53,6 @@ volumes:
 ######################################################################
 
 
-
 #version: '2'
 #services:
 #    rabbit:
@@ -78,8 +80,6 @@ volumes:
 #        image: mongo:latest
 #        ports:
 #            - "27018:27017"
-
-
 
 
 ######################################################################
