@@ -1,12 +1,21 @@
-FROM continuumio/anaconda3:latest
+FROM python:3.6
 MAINTAINER "Vladislav Ladenkov <waryak2012@mail.ru>"
 
 WORKDIR /
 
 COPY src/algo ./src/algo
+COPY src/network ./src/network
+COPY requirements.txt /requirements.txt
+
+RUN pip install --upgrade pip
+RUN pip install -r /requirements.txt
+
+ENV ROLE worker
 ENV CONFIG /mnt/configs/config.yml
 
-WORKDIR /src
-ENTRYPOINT ["python3", "-m", "algo.main"]
+WORKDIR /src/network
 
+ENTRYPOINT ["celery", "-A", "messages", "worker", "--concurrency=4", "--loglevel=info"]
 
+# ENTRYPOINT ["python3", "-m", "algo.main"]
+# ENTRYPOINT celery -A test_celery worker --concurrency=20 --loglevel=info

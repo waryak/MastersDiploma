@@ -3,6 +3,8 @@ MAINTAINER "Vladislav Ladenkov <waryak2012@mail.ru>"
 
 WORKDIR /
 
+
+ENV ROLE producer
 ENV CONFIG /mnt/configs/config.yml
 
 COPY src/network/messages /src/network/messages

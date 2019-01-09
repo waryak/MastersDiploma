@@ -2,18 +2,26 @@ from os import environ
 from celery import Celery
 
 print("--------------- LOADING ENVIRONMENT VARIABLES ---------------")
-PRODUCER_BROKER_URL = environ.get('CONFIG')
-if PRODUCER_BROKER_URL is None:
-    raise Exception("Broker URL for producer could not be found")
-else:
-    print("-> Producer's url is:", PRODUCER_BROKER_URL)
-WORKER_BROKER_URL = environ.get('CONFIG')
-if WORKER_BROKER_URL is None:
-    raise Exception("Broker URL for worker could not be found")
-else:
-    print("-> Worker's url is:", WORKER_BROKER_URL)
+ROLE = environ.get('ROLE')
+if ROLE is None:
+    raise Exception("ROLE environment variable could not be found")
+
+if ROLE == "worker":
+    BROKER_URL = environ.get("WORKER_BROKER_URL")
+    if BROKER_URL is None:
+        raise Exception("Broker URL for worker could not be found")
+    else:
+        print("-> Worker's broker url is:", BROKER_URL)
+if ROLE == "producer":
+    BROKER_URL = environ.get("PRODUCER_BROKER_URL")
+    if BROKER_URL is None:
+        raise Exception("Broker URL for producer could not be found")
+    else:
+        print("-> Worker's broker url is:", BROKER_URL)
+
+print("-------------------- STARTING CELERY APP --------------------")
 app = Celery('test_celery',
-             broker=PRODUCER_BROKER_URL,
+             broker=BROKER_URL,
              backend='rpc://',
              include=['messages.tasks'])
 
