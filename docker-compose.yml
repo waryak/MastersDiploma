@@ -2,6 +2,7 @@ version: '3.7'
 services:
 
     rabbit:
+
       hostname: rabbit
       image: rabbitmq:latest
       environment:
@@ -29,6 +30,8 @@ services:
         build:
           context: .
           dockerfile: dockerfiles/Dockerfile.worker
+        env_file:
+        - configs/variables.env
         volumes:
         - type: bind
           source: ./configs
