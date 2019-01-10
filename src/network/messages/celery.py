@@ -5,6 +5,8 @@ print("--------------- LOADING ENVIRONMENT VARIABLES ---------------")
 ROLE = environ.get('ROLE')
 if ROLE is None:
     raise Exception("ROLE environment variable could not be found")
+else:
+    print("Node role is:", ROLE)
 
 if ROLE == "worker":
     BROKER_URL = environ.get("WORKER_BROKER_URL")
