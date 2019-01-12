@@ -33,6 +33,6 @@ url = 'mongodb://{user}:{pw}@{hosts}/?replicaSet={rs}&authSource={auth_src}'.for
     auth_src='db1')
 dbs = pymongo.MongoClient(
     url,
-    ssl_ca_certs='/usr/local/share/ca-certificates/Yandex/YandexInternalRootCA.crt',
+    ssl_ca_certs='/.mongodb/CA.pem',
     ssl_cert_reqs=ssl.CERT_REQUIRED)['db1']
     
