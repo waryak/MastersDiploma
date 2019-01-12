@@ -1,0 +1,38 @@
+How to connect to mongo server on yandex cloud
+
+First, install mongo on ubuntu:
+sudo apt-get update
+sudo apt-get install -y mongodb-org
+
+1) mkdir ~/.mongodb/
+2) wget "https://storage.yandexcloud.net/mdb/CA.pem" -O ~/.mongodb/CA.pem
+Connect using shell:
+mongo --norc \
+        --ssl \
+        --sslCAFile ~/.mongodb/CA.pem \
+        --host 'rs01/rc1c-iqnqnjr0rs54ud1m.mdb.yandexcloud.net:27018' \
+        -u user1 \
+        -p <password> \
+        db1
+        
+        
+Connect using python
+1) pip install pyMongo
+from urllib.parse import quote_plus as quote
+
+import ssl
+import pymongo
+
+url = 'mongodb://{user}:{pw}@{hosts}/?replicaSet={rs}&authSource={auth_src}'.format(
+    user=quote('user1'),
+    pw=quote('<password>'),
+    hosts=','.join([
+        'rc1c-iqnqnjr0rs54ud1m.mdb.yandexcloud.net'
+    ]),
+    rs='rs01',
+    auth_src='db1')
+dbs = pymongo.MongoClient(
+    url,
+    ssl_ca_certs='/usr/local/share/ca-certificates/Yandex/YandexInternalRootCA.crt',
+    ssl_cert_reqs=ssl.CERT_REQUIRED)['db1']
+    
