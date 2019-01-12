@@ -1,14 +1,21 @@
-FROM continuumio/anaconda3:latest
+FROM python:3.6
 MAINTAINER "Vladislav Ladenkov <waryak2012@mail.ru>"
 
 WORKDIR /
 
 COPY src/network/messages /src/network/messages
 COPY requirements.txt /requirements.txt
-RUN pip install -r /requirements.txt
+
+RUN pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org --upgrade pip
+RUN pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org -r /requirements.txt
 
 WORKDIR /src/network
 
-#ENTRYPOINT ["python3", "-m", "messages.run_tasks"]
+ENV ROLE producer
+ENV CONFIG /mnt/configs/config.yml
+
+
+ENTRYPOINT ["python3", "-m", "messages.run_tasks"]
+
 
 

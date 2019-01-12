@@ -17,6 +17,6 @@ It contains example of running full backtest with generating HTML dashboard with
 
 
 ## Documentation
-1. [Build worker image](docs/worker_build.md)
+1. [Build worker image](docs/images_build.md)
 
 
