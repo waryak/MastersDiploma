@@ -3,22 +3,25 @@ import yaml
 from pathlib import PurePosixPath
 from os import makedirs, path, environ
 import sys
-from algo.runge_kutta import RungeKutta
-from algo.wishart import ParallelWishart
-from algo.utils import generate_templates, generate_arguments
-
-if __name__ == "__main__":
+from src.algo.runge_kutta import RungeKutta
+from src.algo.wishart import ParallelWishart
+from src.algo.utils import generate_templates, generate_arguments
 
 
-    # configs
+
+def main():
+    """
+    Main function to perform configs loading and wishart calculations
+    :return:
+    """
+
+    print("-------------- LOADING WISHART CONFIGURATIONS ---------------")
     file_conf = environ.get('CONFIG')
     try:
         with open(file_conf, 'r') as file_conf:
             configs = yaml.load(file_conf)
     except Exception:
         raise Exception("Could not find configuration file")
-
-
     CONFIG_DATA_GENERATE = configs["data"]["generate"]
     CONFIG_MOUNT_POINT = PurePosixPath(configs["data"]["mount_point"])
     CONFIG_DATA_PATH_TO_TS = CONFIG_MOUNT_POINT / configs["data"]["path_to_ts"]
@@ -41,6 +44,7 @@ if __name__ == "__main__":
     if not path.exists(CONFIG_DATA_PATH_TO_MODELS.as_posix()):
         print("> Creating directories for models data! (ATTENTION HERE)")
         makedirs(CONFIG_DATA_PATH_TO_MODELS.as_posix())
+
 
     print("------------------- GENERATE OR LOAD DATA -------------------")
     if CONFIG_DATA_GENERATE:
@@ -87,3 +91,22 @@ if __name__ == "__main__":
     else:
         # Run it several times
         pass
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

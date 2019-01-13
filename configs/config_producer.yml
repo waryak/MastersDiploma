@@ -1,0 +1,11 @@
+data:
+  generate: True
+  mount_point: "var/data"
+  path_to_ts: "data_ts"
+  path_to_models: "data_clusters"
+
+algorithm:
+  number_of_templates: 200
+
+
+

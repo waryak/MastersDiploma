@@ -11,11 +11,8 @@ RUN pip install --upgrade pip
 RUN pip install -r /requirements.txt
 
 ENV ROLE worker
-ENV CONFIG /mnt/configs/config.yml
+ENV CONFIG /mnt/configs/config_worker.yml
 
 WORKDIR /src/network
 
 ENTRYPOINT ["celery", "-A", "messages", "worker", "--concurrency=4", "--loglevel=info"]
-
-# ENTRYPOINT ["python3", "-m", "algo.main"]
-# ENTRYPOINT celery -A test_celery worker --concurrency=20 --loglevel=info
