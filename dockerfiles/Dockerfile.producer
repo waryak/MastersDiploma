@@ -12,7 +12,7 @@ RUN pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org -r
 WORKDIR /src/network
 
 ENV ROLE producer
-ENV CONFIG /mnt/configs/config.yml
+ENV CONFIG /mnt/configs/config_producer.yml
 
 
 ENTRYPOINT ["python3", "-m", "messages.run_tasks"]

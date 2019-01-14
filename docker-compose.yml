@@ -16,9 +16,12 @@ services:
           context: .
           dockerfile: dockerfiles/Dockerfile.producer
         env_file:
-          -  configs/variables.env
+          - configs/variables_producer.env
         volumes:
           - .:/app
+          - type: volume
+            source: wishart-producer
+            target: /var/data
         links:
           - rabbit
         depends_on:
@@ -31,7 +34,7 @@ services:
           context: .
           dockerfile: dockerfiles/Dockerfile.worker
         env_file:
-        - configs/variables.env
+        - configs/variables_producer.env
         volumes:
         - type: bind
           source: ./configs
