@@ -18,10 +18,14 @@ services:
         env_file:
           - configs/variables_producer.env
         volumes:
-          - .:/app
-          - type: volume
-            source: wishart-producer
-            target: /var/data
+          # TODO: CHECKOUT WHETHER THE APP MOUNT IS "BIND" OR "VOLUME" - <.:/app>
+#        - type: volume
+#          source: wishart-producer
+#          target: /var/data
+        - type: bind
+          source: .
+          target: /app
+
         links:
           - rabbit
         depends_on:

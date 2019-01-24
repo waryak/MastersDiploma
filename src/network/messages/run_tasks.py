@@ -13,8 +13,8 @@ if __name__ == '__main__':
             configs = yaml.load(file_conf)
     except Exception:
         raise Exception("Could not find configuration file")
-    NUMBER_OF_TEPLATES = int(configs["algorithm"]["number_of_templates"])
-    assert (NUMBER_OF_TEPLATES > 0) & (NUMBER_OF_TEPLATES < int(10e6)), "Something wrong, with <NUMBER_OF_TEPLATES>"
+    NUMBER_OF_TEMPLATES = int(configs["algorithm"]["number_of_templates"])
+    assert (NUMBER_OF_TEMPLATES > 0) & (NUMBER_OF_TEMPLATES < int(10e6)), "Something wrong, with <NUMBER_OF_TEPLATES>"
 
     print("--------------- CREATING THE TEMPLATE MANAGER ---------------")
 

@@ -145,6 +145,3 @@ def generate_arguments(templates, ts, m, n_lags):
         args["n_lags"] = n_lags
         arguments.append(args)
     return arguments
-
-
-
