@@ -1,11 +1,11 @@
-from __future__ import absolute_import
-from messages.celery import app
 import time
 import datetime as dt
 
 
-
 from src.algo.main import main
+
+from messages.celery import app
+from __future__ import absolute_import
 
 
 @app.task()
@@ -15,8 +15,9 @@ def longtime_add(count):
     :param count: The number of task
     :return: The number of tasks and the timestamp itself
     """
+    print("-------------------------------------------------------------")
     print('long time task begins')
-    time.sleep(1)
+    time.sleep(3)
     print('long time task finished')
 
     return str(count) + ". Hello. This is your timestamp " + str(dt.datetime.today())
@@ -32,8 +33,8 @@ def run_wishart(template, wishart_neighbors, wishart_significance):
     :param wishart_significance:
     :return:
     """
-    result = main(template, wishart_neighbors, wishart_significance)
-    return result
+    clusters_completeness, significant_clusters = main(template, wishart_neighbors, wishart_significance)
+    return clusters_completeness, significant_clusters
 
 
 

@@ -14,7 +14,28 @@ class TemplateManager:
         self.min_template_distance = min_template_distance
 
     def next_planned_template(self):
+        """
+
+        :return:
+        """
         next_template = np.random.random_integers(low=self.min_template_distance,
                                                   high=self.max_template_distance,
                                                   size=self.template_size - 1)
         return next_template
+
+    def next_planned_significance(self):
+        """
+
+        :return:
+        """
+        return 0.1
+
+    def next_planned_neighbors(self):
+        """
+
+        :return:
+        """
+        return 11
+
+
+

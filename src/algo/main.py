@@ -27,15 +27,19 @@ def main(template, wishart_neighbors, wishart_significance):
 
     dd = DataDownloader(mount_point_path=CONFIG_MOUNT_POINT)
     dp = DataPreprocessor(dd=dd, kind_of_data="lorenz", train_spec=None)
-    ds = DataSaver(template.astype(str), wishart_neighbors, wishart_significance,
-                   local_path=CONFIG_MOUNT_POINT,
-                   base_name="lorenz")
+    ds = DataSaver(local_path=CONFIG_MOUNT_POINT,
+                   base_name="lorenz",
+                   template=template,
+                   **{"wishart_neighbors": wishart_neighbors,
+                      "wishart_significance": wishart_significance})
+
 
     print("------------------- GENERATE OR LOAD DATA -------------------")
     dd.generate_lorenz(beta=8 / 3, rho=28, sigma=10, dt=0.1, size=int(3e6))
 
     print("---------------------- PREPROCESS DATA ----------------------")
     reconstructed_ts = dp.prepare_data(template=template)
+    reconstructed_ts = reconstructed_ts[:200000]
 
     print("------------------------ RUN WISHART ------------------------")
     print("-> Using parameters: \n      template: {template}\n"
@@ -60,6 +64,8 @@ def main(template, wishart_neighbors, wishart_significance):
 
     print("------------------- SAVING/UPLOADING DATA -------------------")
     ds.save_to_volume(ws)
+
+    return ws.clusters_completenes, ws.significant_clusters
 
 
 

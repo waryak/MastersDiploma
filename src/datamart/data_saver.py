@@ -1,4 +1,3 @@
-import numpy as np
 from os import makedirs, path
 from pickle import dump
 from pathlib import PurePosixPath
@@ -6,20 +5,26 @@ from pathlib import PurePosixPath
 
 class DataSaver:
     """
-
+    Class that implements methods to save models to volumes and upload them to database
     """
 
-    def __init__(self, *model_params, local_path, base_name):
+    def __init__(self, local_path, base_name, template, **kwargs):
         """
 
-        :param kind_of_data: Determines kind of data: <Lorenz> or <Financial>
+        :param local_path:
+        :param base_name:
+        :param template:
+        :param kwargs:
         """
+        print("DEBUG", kwargs)
+        print(template.astype(str))
         self.LOCAL_PATH = PurePosixPath(local_path)
-        self.model_name = base_name + "_" + "_".join(model_params)
+        self.model_name = base_name + "_" + "_".join(template.astype(str))
+        self.model_name = self.model_name + "_" + "_".join(list(map(str, kwargs.values())))
         self.local_path_to_model = self.LOCAL_PATH / self.model_name
 
 
-
+    # TODO: Hash functions for model's names to distinguish them
 
     def _check_paths(self):
         """
@@ -51,7 +56,7 @@ class DataSaver:
         self._check_paths()
 
         path_to_model = self.LOCAL_PATH / self.model_name
-        with open(path_to_model, "rb") as f:
+        with open(path_to_model, "wb") as f:
             dump(obj, f)
 
     def _load_to_database(self):

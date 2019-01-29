@@ -9,6 +9,7 @@ from pathlib import PurePosixPath
 
 # TODO: WISHART NEEDS HELP!!!!
 
+# noinspection PyPackageRequirements
 class Wishart:
     """
     Implementation of basic Wishart algorithm.
@@ -196,7 +197,6 @@ class Wishart:
         cluster_centers = np.zeros(shape=(len(self.clusters_completenes), data.shape[1]))
         for cluster_index, cluster in enumerate(self.clusters_completenes):
             cluster_data = data[self.clusters == cluster]
-            print("CLUSTERS", cluster, cluster_data.shape)
             cluster_center = cluster_data.mean(axis=0)
             cluster_centers[cluster_index] = cluster_center
         self.cluster_centers = cluster_centers

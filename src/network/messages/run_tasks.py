@@ -1,7 +1,7 @@
 import time
 import yaml
 from os import environ
-from messages.tasks import longtime_add
+from messages.tasks import longtime_add, run_wishart
 from src.network.messages.template_planner import TemplateManager
 
 if __name__ == '__main__':
@@ -22,20 +22,26 @@ if __name__ == '__main__':
                          max_template_distance=10,
                          min_template_distance=1)
 
-
-
     print("----------------- STARTING SUBMITTING TASKS -----------------")
-    for count in range(30):
 
-        # TODO: HERE WE USE CSV FILE TO WRITE DOWN ALL
+    for count in range(130):
+        # TODO: HERE WE USE CSV FILE TO WRITE DOWN ALL TEMPLATES USED CHECK IF ARE NOT USING DUPLICATED TEMPLATE
+
         template = tm.next_planned_template()
+        wishart_neighbors = tm.next_planned_neighbors()
+        wishart_significance = tm.next_planned_significance()
+        print("That's the task number %i\n" % count,
+              "-> Running with parameters:\n"
+              "--> wishart_neighbors=%s\n" % wishart_neighbors,
+              "--> wishart_significance=%s" % wishart_significance)
 
-        print("Count is ", count)
-        result = longtime_add.delay(count)
+        result = run_wishart.delay(template, wishart_neighbors, wishart_significance)
 
-        print('Task finished?', result.ready())
+        # result = longtime_add.delay(count)
+
+        print('Task finished?', result.readyё())
         print('Task result:', result.result)
-        time.sleep(5)
+        time.sleep(30)
         print('Task finished"', result.ready())
         print('Task result:', result.result)
 
@@ -45,9 +51,9 @@ if __name__ == '__main__':
 
 
 
-    for count in range(130):
-        print("Count is ", count)
-        result = longtime_add.delay(count)
+    # for count in range(130):
+    #     print("Count is ", count)
+    #     result = longtime_add.delay(count)
         # print('Task finished?', result.ready())
         # print('Task result:', result.result)
         # print('Task finished"', result.ready())
