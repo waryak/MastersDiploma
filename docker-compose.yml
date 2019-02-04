@@ -38,7 +38,7 @@ services:
           context: .
           dockerfile: dockerfiles/Dockerfile.worker
         env_file:
-        - configs/variables_producer.env
+        - configs/variables_worker.env
         volumes:
         - type: bind
           source: ./configs

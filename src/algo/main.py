@@ -33,7 +33,6 @@ def main(template, wishart_neighbors, wishart_significance):
                    **{"wishart_neighbors": wishart_neighbors,
                       "wishart_significance": wishart_significance})
 
-
     print("------------------- GENERATE OR LOAD DATA -------------------")
     dd.generate_lorenz(beta=8 / 3, rho=28, sigma=10, dt=0.1, size=int(3e6))
 

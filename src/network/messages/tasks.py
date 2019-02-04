@@ -1,12 +1,14 @@
-import time
-import datetime as dt
-
-
-from src.algo.main import main
-
-from messages.celery import app
 from __future__ import absolute_import
 
+import sys
+import time
+import numpy as np
+import datetime as dt
+
+from src.algo.main import main
+from src.network.messages.celery import app
+
+sys.path.append("/src")
 
 @app.task()
 def longtime_add(count):
@@ -33,7 +35,7 @@ def run_wishart(template, wishart_neighbors, wishart_significance):
     :param wishart_significance:
     :return:
     """
-    clusters_completeness, significant_clusters = main(template, wishart_neighbors, wishart_significance)
+    clusters_completeness, significant_clusters = main(np.array(template), wishart_neighbors, wishart_significance)
     return clusters_completeness, significant_clusters
 
 

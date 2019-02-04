@@ -1,7 +1,7 @@
 import time
 import yaml
 from os import environ
-from messages.tasks import longtime_add, run_wishart
+from src.network.messages.tasks import longtime_add, run_wishart
 from src.network.messages.template_planner import TemplateManager
 
 if __name__ == '__main__':
@@ -30,16 +30,20 @@ if __name__ == '__main__':
         template = tm.next_planned_template()
         wishart_neighbors = tm.next_planned_neighbors()
         wishart_significance = tm.next_planned_significance()
+        # TODO: Arrows are printed with extra space - look inside src.algo.main
         print("That's the task number %i\n" % count,
               "-> Running with parameters:\n"
               "--> wishart_neighbors=%s\n" % wishart_neighbors,
               "--> wishart_significance=%s" % wishart_significance)
 
-        result = run_wishart.delay(template, wishart_neighbors, wishart_significance)
+        # TODO: BULLSHIT WITH SERIALIZATION. NEED TO FIX ARGUMENT PASSING TO TASK
+        template = list(template)
+        template = [str(e) for e in template]
+        result = run_wishart.delay(template, str(wishart_neighbors), str(wishart_significance))
 
         # result = longtime_add.delay(count)
 
-        print('Task finished?', result.readyё())
+        print('Task finished?', result.ready())
         print('Task result:', result.result)
         time.sleep(30)
         print('Task finished"', result.ready())
