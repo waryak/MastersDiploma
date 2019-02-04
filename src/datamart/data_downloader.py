@@ -65,6 +65,7 @@ class DataDownloader:
         :return:
         """
         path_to_data = self.get_path_to_data()
+        print("--> loading time series from file ", path_to_data.as_posix())
         with open(path_to_data.as_posix(), "rb") as f:
             data = np.load(file=f)
         return data

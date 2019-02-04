@@ -35,6 +35,9 @@ def run_wishart(template, wishart_neighbors, wishart_significance):
     :param wishart_significance:
     :return:
     """
+    template = [int(e) for e in template]
+    wishart_neighbors = int(wishart_neighbors)
+    wishart_significance = float(wishart_significance)
     clusters_completeness, significant_clusters = main(np.array(template), wishart_neighbors, wishart_significance)
     return clusters_completeness, significant_clusters
 

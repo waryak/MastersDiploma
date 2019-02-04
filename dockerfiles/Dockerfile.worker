@@ -19,4 +19,4 @@ ENV CONFIG /mnt/configs/config_worker.yml
 #WORKDIR /src/network
 #ENTRYPOINT ["celery", "-A", "messages", "worker", "--concurrency=4", "--loglevel=info"]
 
-ENTRYPOINT ["celery", "-A", "src.network.messages.celery", "worker", "--concurrency=4", "--loglevel=info"]
+ENTRYPOINT ["celery", "-A", "src.network.messages", "worker", "--concurrency=4", "--loglevel=info"]
