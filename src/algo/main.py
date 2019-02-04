@@ -38,7 +38,6 @@ def main(template, wishart_neighbors, wishart_significance):
 
     print("---------------------- PREPROCESS DATA ----------------------")
     reconstructed_ts = dp.prepare_data(template=template)
-    reconstructed_ts = reconstructed_ts[:200000]
 
     print("------------------------ RUN WISHART ------------------------")
     print("-> Using parameters: \n      template: {template}\n"
