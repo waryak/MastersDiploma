@@ -25,7 +25,7 @@ print("-------------------- STARTING CELERY APP --------------------")
 app = Celery('test_celery',
              broker=BROKER_URL,
              backend='rpc://',
-             include=['messages.tasks'])
+             include=['src.network.messages.tasks'])
 
 
 

@@ -3,19 +3,21 @@ MAINTAINER "Vladislav Ladenkov <waryak2012@mail.ru>"
 
 WORKDIR /
 
-COPY src/network/messages /src/network/messages
 COPY requirements.txt /requirements.txt
-
 RUN pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org --upgrade pip
 RUN pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org -r /requirements.txt
 
-WORKDIR /src/network
+COPY src/network/messages /src/network/messages
+COPY src/algo /src/algo
+COPY src/datamart /src/datamart
+
+COPY configs/config_producer.yml /mnt/configs/config_producer.yml
 
 ENV ROLE producer
-ENV CONFIG /mnt/configs/config.yml
+ENV CONFIG /mnt/configs/config_producer.yml
 
 
-ENTRYPOINT ["python3", "-m", "messages.run_tasks"]
+ENTRYPOINT ["python3", "-m", "src.network.messages.run_tasks"]
 
 
 

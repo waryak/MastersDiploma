@@ -9,18 +9,27 @@ from pathlib import PurePosixPath
 
 # TODO: WISHART NEEDS HELP!!!!
 
+# noinspection PyPackageRequirements
 class Wishart:
     """
     Implementation of basic Wishart algorithm.
     Using numpy and cKDTree from scipy
     """
 
-    def __init__(self, k, h):
-        self.k = k  # Number of neighbors
+    def __init__(self, wishart_neighbors, significance_level):
+        self.wishart_neighbors = wishart_neighbors  # Number of neighbors
         self.G = np.array([], dtype=int)  # "Graph" array which stores all nodes.
-        self.h = h  # Significance level
+        self.significance_level = significance_level  # Significance level
         self.clusters_completenes = set()  # Set of completed clusters
         self.significant_clusters = set()  # Set of significant clusters
+
+    def __getstate__(self):
+        """
+        This function defines the fields of the class to be pickled.
+        :return: All class fields except for "pool". It cannot be serialized.
+        """
+        self_dict = self.__dict__.copy()
+        return self_dict
 
     def _fit_kd_tree(self, z_vectors):
         """
@@ -38,10 +47,10 @@ class Wishart:
         :return: volume of the ball.
         """
         if hasattr(self, 'clusters'):
-            volume = (radius ** self.k) * (np.pi ** (self.k / 2)) / gamma(self.k / 2 + 1)
+            volume = (radius ** self.wishart_neighbors) * (np.pi ** (self.wishart_neighbors / 2)) / gamma(self.wishart_neighbors / 2 + 1)
         else:
             raise Exception("Array for clusters storage was not created till now. Something is completly wrong")
-        return self.k / self.clusters.shape[0] / volume
+        return self.wishart_neighbors / self.clusters.shape[0] / volume
 
     def _check_cluster_significance(self, cluster, matrix_distances):
         """
@@ -52,13 +61,13 @@ class Wishart:
                                False - if cluster is not significant doesn't need to be added to the list.
         """
         assert cluster in self.clusters, "There is no presence of cluster %i in the graph yet" % cluster
-        verticies_radiuses = matrix_distances[self.clusters == cluster][:, self.k - 1]
+        verticies_radiuses = matrix_distances[self.clusters == cluster][:, self.wishart_neighbors - 1]
         vertex_with_biggest_radius = max(verticies_radiuses)
         vertex_with_smalles_radius = min(verticies_radiuses)
         ball_volume_max = self._n_dim_ball_volume(vertex_with_biggest_radius)
         ball_volume_min = self._n_dim_ball_volume(vertex_with_smalles_radius)
         maximum_difference = abs(ball_volume_max - ball_volume_min)
-        if maximum_difference > self.h:
+        if maximum_difference > self.significance_level:
             return True
         else:
             return False
@@ -70,11 +79,11 @@ class Wishart:
         :param kdtree: cKDTree, fitted on z-vectors.
         :return:
         """
-        zvector_neighbors_distances = np.zeros(shape=(z_vectors.shape[0], self.k))
-        zvector_neighbors_indexes = np.empty(shape=(z_vectors.shape[0], self.k))
+        zvector_neighbors_distances = np.zeros(shape=(z_vectors.shape[0], self.wishart_neighbors))
+        zvector_neighbors_indexes = np.empty(shape=(z_vectors.shape[0], self.wishart_neighbors))
         self.clusters = np.zeros(z_vectors.shape[0], dtype=int)
         for index, z_vector in enumerate(z_vectors):
-            zvector_neighbors_dist, zvector_neighbors_ind = kdtree.query(x=z_vector, k=self.k + 1)
+            zvector_neighbors_dist, zvector_neighbors_ind = kdtree.query(x=z_vector, k=self.wishart_neighbors + 1)
             zvector_neighbors_distances[index] = zvector_neighbors_dist[1:]
             zvector_neighbors_indexes[index] = zvector_neighbors_ind[1:]
         # sort matrix by ascending of the distance to the furthest NN
@@ -188,13 +197,16 @@ class Wishart:
         cluster_centers = np.zeros(shape=(len(self.clusters_completenes), data.shape[1]))
         for cluster_index, cluster in enumerate(self.clusters_completenes):
             cluster_data = data[self.clusters == cluster]
-            print("CLUSTERS", cluster, cluster_data.shape)
             cluster_center = cluster_data.mean(axis=0)
             cluster_centers[cluster_index] = cluster_center
         self.cluster_centers = cluster_centers
 
     def _cluster_kdtree(self, n_lags):
         """
+        Cuts cluster-centers and find k-nn for them.
+        For examples if clusters centers are of size 7 and n_lags = 5, t
+        hen we would be able to predict 2 points ahead.
+        :param n_lags: number of elements from cluster center's z-vectors to use in prediction
         """
         lagged_data = self.cluster_centers[:, :n_lags]
         print("LAGGED DATA: ", lagged_data.shape)
@@ -244,7 +256,7 @@ class ParallelWishart:
         :param args:
         :return: path to the saved model
         """
-        ws = Wishart(k=self.k, h=self.h)
+        ws = Wishart(wishart_neighbors=self.k, significance_level=self.h)
         print("--> Fitting KDTree")
         kdt = ws._fit_kd_tree(z_vectors=args["z_vectors"])
         print("--> Constructing vertex data")
@@ -285,9 +297,9 @@ class ParallelWishart2(Wishart):
     Parallelisation of Wishart algorithm
     """
 
-    def __init__(self, MODEL_PATH: PurePosixPath, k: int, h: float, n_processes: int = 2):
-        self.k = k
-        self.h = h
+    def __init__(self, MODEL_PATH: PurePosixPath, wishart_neighbors: int, significance_level: float, n_processes: int = 2):
+        self.k = wishart_neighbors
+        self.h = significance_level
         self.n_processes = n_processes
         self.pool = Pool(processes=n_processes)
 
@@ -301,7 +313,7 @@ class ParallelWishart2(Wishart):
         :param args:
         :return: path to the saved model
         """
-        ws = Wishart(k=self.k, h=self.h)
+        ws = Wishart(wishart_neighbors=self.k, significance_level=self.h)
         kdt = ws._fit_kd_tree(z_vectors=args["z_vectors"])
         m_d, m_i, v_s = ws._construct_neighbors_matrix(z_vectors=args["z_vectors"], kdtree=kdt)
         m_i = m_i.astype(int)
