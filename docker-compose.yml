@@ -2,7 +2,6 @@ version: '3.7'
 services:
 
     rabbit:
-
       hostname: rabbit
       image: rabbitmq:latest
       environment:
@@ -10,6 +9,16 @@ services:
       - RABBITMQ_DEFAULT_PASS=mypass
       ports:
       - "5672:5672"
+
+    flower:
+      image: mher/flower
+      environment:
+      - CELERY_BROKER_URL=amqp://admin:mypass@rabbit:5672
+      - FLOWER_PORT=8888
+      ports:
+      - 8888:8888
+      depends_on:
+      - rabbit
 
     wishart-producer:
         build:
