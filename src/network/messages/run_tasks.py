@@ -49,9 +49,6 @@ if __name__ == '__main__':
         print('Task finished"', result.ready())
         print('Task result:', result.result)
 
-    tp = TemplateManager(size=6,
-                         max_template_distance=10,
-                         min_template_distance=1)
 
 
 

@@ -34,7 +34,7 @@ def main(template, wishart_neighbors, wishart_significance):
                       "wishart_significance": wishart_significance})
 
     print("------------------- GENERATE OR LOAD DATA -------------------")
-    dd.generate_lorenz(beta=8 / 3, rho=28, sigma=10, dt=0.1, size=int(3e6))
+    dd.generate_lorenz(beta=8 / 3, rho=28, sigma=10, dt=0.1, size=int(2e5))
 
     print("---------------------- PREPROCESS DATA ----------------------")
     reconstructed_ts = dp.prepare_data(template=template)
@@ -63,51 +63,15 @@ def main(template, wishart_neighbors, wishart_significance):
     print("------------------- SAVING/UPLOADING DATA -------------------")
     ds.save_to_volume(ws)
 
-    return ws.clusters_completenes, ws.significant_clusters
+    return len(ws.clusters_completenes), len(ws.significant_clusters)
 
 
 
-
-
-    #
-    # print("----------- CONSTRUCT DATA FOR POOL OF PROCESSES ------------")
-    # templates = generate_templates(n_dimension=RECONSTRUCT_DIMENSION - 1,
-    #                                max_distance=TEMPLATE_MAX_DISTANCE,
-    #                                step=TEMPLATE_INDEX_STEP,
-    #                                start_index=TEMPLATE_START_INDEX,
-    #                                end_index=TEMPLATE_END_INDEX)
-    # # TODO: REPLACE FALSE WITH CONFIG
-    # if True:
-    #     print("--> Running one iteration of pool workers and stopping")
-    #     templates = templates[:N_PROCESSES]
-    #     if templates.shape[0] < N_PROCESSES:
-    #         print("--> Warning! Number of is less than number of processes")
-    #         print(templates.shape, ts.shape, RECONSTRUCT_DIMENSION)
-    #     arguments = generate_arguments(templates=templates,
-    #                                    ts=ts,
-    #                                    m=RECONSTRUCT_DIMENSION,
-    #                                    n_lags=1)
-    #     if path.exists(CONFIG_DATA_PATH_TO_MODELS):
-    #         print("--> Models storage already exist. Be sure everything is under control")
-    #     else:
-    #         print("--> Creating folder to store models for the first time.")
-    #         makedirs(CONFIG_DATA_PATH_TO_MODELS.as_posix())
-    #     pw = ParallelWishart(MODEL_PATH=CONFIG_DATA_PATH_TO_MODELS,
-    #                          k=WISHART_NEIGHBORS,
-    #                          h=WISHART_SIGNIFICANCE,
-    #                          n_processes=N_PROCESSES)
-    #     print("-------- RUN PARALLEL WISHART FOR ONE POOL ITERATION --------")
-    #     result = pw.run_wishart(list_of_args=arguments)
-    # else:
-    #     # Run it several times
-    #     pass
-
-
-if __name__ == "__main__":
-
-    t = np.array([1, 2, 3, 4])
-    wishart_neighbors = 11
-    wishart_significance = 0.2
-    main(template=t,
-         wishart_neighbors=wishart_neighbors,
-         wishart_significance=wishart_significance)
+# if __name__ == "__main__":
+#
+#     t = np.array([1, 2, 3, 4])
+#     wishart_neighbors = 11
+#     wishart_significance = 0.2
+#     main(template=t,
+#          wishart_neighbors=wishart_neighbors,
+#          wishart_significance=wishart_significance)
