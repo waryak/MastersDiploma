@@ -41,14 +41,14 @@ if __name__ == '__main__':
         template = list(template)
         template = [str(e) for e in template]
         result = run_wishart.delay(template, str(wishart_neighbors), str(wishart_significance))
-
+        time.sleep(180)
         # result = longtime_add.delay(count)
 
-        print('Task finished?', result.ready())
-        print('Task result:', result.result)
-        time.sleep(30)
-        print('Task finished"', result.ready())
-        print('Task result:', result.result)
+        # print('Task finished?', result.ready())
+        # print('Task result:', result.result)
+        # time.sleep(120)
+        # print('Task finished"', result.ready())
+        # print('Task result:', result.result)
 
 
 
@@ -61,10 +61,3 @@ if __name__ == '__main__':
         # print('Task finished"', result.ready())
         # print('Task result:', result.result)
 
-
-    def preprocess(d):
-        d["is_click"] = (d.ev_type == "CLICK").astype(int)
-        d = d.rename(columns={"visitor_id": "client_data",
-                              "ts_event": "date_view"})
-        d = d.loc[:, ["client_data", "campaign", "date_view", "is_click"]]
-        return d
