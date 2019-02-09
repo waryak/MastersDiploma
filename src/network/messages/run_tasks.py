@@ -23,10 +23,11 @@ if __name__ == '__main__':
                          min_template_distance=1)
 
     print("----------------- STARTING SUBMITTING TASKS -----------------")
-
-    for count in range(130):
+    template = "OK"
+    count = 0
+    while template:
         # TODO: HERE WE USE CSV FILE TO WRITE DOWN ALL TEMPLATES USED CHECK IF ARE NOT USING DUPLICATED TEMPLATE
-
+        count = count + 1
         template = tm.next_planned_template(method="concurrent",
                                             step=3)
         wishart_neighbors = tm.next_planned_neighbors()
@@ -41,7 +42,7 @@ if __name__ == '__main__':
         template = list(template)
         template = [str(e) for e in template]
         result = run_wishart.delay(template, str(wishart_neighbors), str(wishart_significance))
-        time.sleep(180)
+        time.sleep(150)
         # result = longtime_add.delay(count)
 
         # print('Task finished?', result.ready())

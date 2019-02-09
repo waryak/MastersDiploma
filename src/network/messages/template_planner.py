@@ -82,6 +82,9 @@ class TemplateManager:
                                                           size=self.template_size - 1)
             elif method == "concurrent":
                 self.current_template = self.current_template + step
+                if self.current_template > self.max_template_distance ** self.template_size:
+                    print("-> Run out of templates")
+                    return False
                 next_template = self._template_from_int_to_str(self.current_template)
                 next_template = self._template_from_str_to_int(next_template)
                 # print("--> ", next_template, self._check_templates_validity(template=next_template))
