@@ -42,11 +42,10 @@ if __name__ == '__main__':
         template = list(template)
         template = [str(e) for e in template]
         result = run_wishart.delay(template, str(wishart_neighbors), str(wishart_significance))
-        time.sleep(150)
         # result = longtime_add.delay(count)
 
-        # print('Task finished?', result.ready())
-        # print('Task result:', result.result)
+        print('Task finished?', result.ready())
+
         # time.sleep(120)
         # print('Task finished"', result.ready())
         # print('Task result:', result.result)
