@@ -24,16 +24,15 @@ if __name__ == '__main__':
 
     print("----------------- STARTING SUBMITTING TASKS -----------------")
     template = "OK"
-    count = 0
     while template:
         # TODO: HERE WE USE CSV FILE TO WRITE DOWN ALL TEMPLATES USED CHECK IF ARE NOT USING DUPLICATED TEMPLATE
-        count = count + 1
+
         template = tm.next_planned_template(method="concurrent",
                                             step=3)
         wishart_neighbors = tm.next_planned_neighbors()
         wishart_significance = tm.next_planned_significance()
         # TODO: Arrows are printed with extra space - look inside src.algo.main
-        print("That's the task number %i\n" % count,
+        print("That's the task number %i\n" % tm.current_template,
               "-> Running with parameters:\n"
               "--> wishart_neighbors=%s\n" % wishart_neighbors,
               "--> wishart_significance=%s" % wishart_significance)
