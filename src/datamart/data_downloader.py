@@ -31,6 +31,7 @@ class DataDownloader:
     def generate_lorenz(self, beta, rho, sigma, dt, size):
         """
         Generating Lorenz modeled time series
+        :param size:
         :param beta:
         :param rho:
         :param sigma:

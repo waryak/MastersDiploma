@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
     print("--------------- CREATING THE TEMPLATE MANAGER ---------------")
 
-    tm = TemplateManager(template_size=5,
+    tm = TemplateManager(template_size=4,
                          max_template_distance=10,
                          min_template_distance=1)
 
@@ -27,7 +27,8 @@ if __name__ == '__main__':
     for count in range(130):
         # TODO: HERE WE USE CSV FILE TO WRITE DOWN ALL TEMPLATES USED CHECK IF ARE NOT USING DUPLICATED TEMPLATE
 
-        template = tm.next_planned_template()
+        template = tm.next_planned_template(method="concurrent",
+                                            step=3)
         wishart_neighbors = tm.next_planned_neighbors()
         wishart_significance = tm.next_planned_significance()
         # TODO: Arrows are printed with extra space - look inside src.algo.main
@@ -59,3 +60,11 @@ if __name__ == '__main__':
         # print('Task result:', result.result)
         # print('Task finished"', result.ready())
         # print('Task result:', result.result)
+
+
+    def preprocess(d):
+        d["is_click"] = (d.ev_type == "CLICK").astype(int)
+        d = d.rename(columns={"visitor_id": "client_data",
+                              "ts_event": "date_view"})
+        d = d.loc[:, ["client_data", "campaign", "date_view", "is_click"]]
+        return d

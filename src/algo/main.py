@@ -34,7 +34,7 @@ def main(template, wishart_neighbors, wishart_significance):
                       "wishart_significance": wishart_significance})
 
     print("------------------- GENERATE OR LOAD DATA -------------------")
-    dd.generate_lorenz(beta=8 / 3, rho=28, sigma=10, dt=0.1, size=int(2e5))
+    dd.generate_lorenz(beta=8 / 3, rho=28, sigma=10, dt=0.1, size=int(3e5))
 
     print("---------------------- PREPROCESS DATA ----------------------")
     reconstructed_ts = dp.prepare_data(template=template)
