@@ -33,7 +33,8 @@ if __name__ == '__main__':
         wishart_significance = tm.next_planned_significance()
         # TODO: Arrows are printed with extra space - look inside src.algo.main
         print("That's the task number %i\n" % tm.current_template,
-              "-> Running with parameters:\n"
+              "-> Running with parameters:\n",
+              "--> template is %s\n" % template,
               "--> wishart_neighbors=%s\n" % wishart_neighbors,
               "--> wishart_significance=%s" % wishart_significance)
 
@@ -43,20 +44,20 @@ if __name__ == '__main__':
         result = run_wishart.delay(template, str(wishart_neighbors), str(wishart_significance))
         # result = longtime_add.delay(count)
 
-        print('Task finished?', result.ready())
-
-        # time.sleep(120)
+        time.sleep(5)
         # print('Task finished"', result.ready())
         # print('Task result:', result.result)
-
-
-
 
     # for count in range(130):
     #     print("Count is ", count)
     #     result = longtime_add.delay(count)
-        # print('Task finished?', result.ready())
-        # print('Task result:', result.result)
-        # print('Task finished"', result.ready())
-        # print('Task result:', result.result)
+    # print('Task finished?', result.ready())
+    # print('Task result:', result.result)
+    # print('Task finished"', result.ready())
+    # print('Task result:', result.result)
 
+tm = TemplateManager(template_size=4,
+                     max_template_distance=10,
+                     min_template_distance=1)
+template = tm.next_planned_template(method="concurrent",
+                                    step=3)

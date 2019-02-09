@@ -74,6 +74,7 @@ class TemplateManager:
         # TODO: Repeat while the template satisfies the conditions
         next_template = self._template_from_int_to_str(self.current_template)
         next_template = self._template_from_str_to_int(next_template)
+        # Skip those templates, which does not satisfies the specification.
         while not self._check_templates_validity(template=next_template):
 
             if method == "random":
@@ -88,10 +89,9 @@ class TemplateManager:
                 next_template = self._template_from_int_to_str(self.current_template)
                 next_template = self._template_from_str_to_int(next_template)
                 # print("--> ", next_template, self._check_templates_validity(template=next_template))
-
             else:
                 raise Exception("-> Unspecified method to generate templates. Must be \"random\" or \"concurrent\"")
-
+        self.current_template = self.current_template + step
         return next_template
 
     def next_planned_significance(self):
