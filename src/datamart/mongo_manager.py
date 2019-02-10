@@ -18,7 +18,7 @@ class MongoManager:
         Make a config with params'''
         url = 'mongodb://{user}:{pw}@{hosts}/?replicaSet={rs}&authSource={auth_src}'.format(
             user=quote('user1'),
-            pw=quote('diploma_test'),
+            pw=quote('<passwd>'),
             hosts=','.join([
                 'rc1c-fa410ox5e6dab6yw.mdb.yandexcloud.net:27018'
             ]),
