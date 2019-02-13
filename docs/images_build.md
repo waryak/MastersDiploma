@@ -10,3 +10,5 @@ To build the producer, you just need to execute `c `
 
 #### How to navigate through volume data 
 `docker run --rm -it -v mastersdiploma_wishart-data:/mnt/ ubuntu:16.04 /bin/bash`
+
+#### How to attach to the running container

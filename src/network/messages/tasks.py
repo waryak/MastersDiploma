@@ -18,9 +18,9 @@ def longtime_add(count):
     :return: The number of tasks and the timestamp itself
     """
     print("-------------------------------------------------------------")
-    print('long time task begins')
-    time.sleep(3)
-    print('long time task finished')
+    print('long time task begins', count)
+    time.sleep(100)
+    print('long time task finished', count)
 
     return str(count) + ". Hello. This is your timestamp " + str(dt.datetime.today())
 
@@ -39,7 +39,9 @@ def run_wishart(template, wishart_neighbors, wishart_significance):
     wishart_neighbors = int(wishart_neighbors)
     wishart_significance = float(wishart_significance)
     clusters_completeness, significant_clusters = main(np.array(template), wishart_neighbors, wishart_significance)
-    return clusters_completeness, significant_clusters
+    return {"Number_of_completed_clusters": clusters_completeness,
+            "Number_of_significant_cluster": significant_clusters}
+
 
 
 

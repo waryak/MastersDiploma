@@ -17,7 +17,7 @@ class DataPreprocessor:
         self.data_downloader = dd
 
     @staticmethod
-    def reconstruct_lorenz(ts: np.ndarray, template: np.ndarray):
+    def _reconstruct_lorenz(ts: np.ndarray, template: np.ndarray):
         """
         Reconstructing the time series to array of z-vectors. For example:
         Time series: [1,2,3,4,5,6,7,8,9,10,11,12]
@@ -69,7 +69,7 @@ class DataPreprocessor:
         ts = self.data_downloader.get_data()
         if self.kind_of_data == "lorenz":
             print("-> Preprocessing modeles lorenz data")
-            return self.reconstruct_lorenz(ts=ts,
+            return self._reconstruct_lorenz(ts=ts,
                                            template=template)
         elif self.kind_of_data == "financial":
             print("-> Preprocessing real financial data")

@@ -17,7 +17,7 @@ ENV ROLE producer
 ENV CONFIG /mnt/configs/config_producer.yml
 
 
-ENTRYPOINT ["python3", "-m", "src.network.messages.run_tasks"]
+ENTRYPOINT ["python3", "-u", "-m", "src.network.messages.run_tasks"]
 
 
 
