@@ -48,22 +48,12 @@ def main(template, wishart_neighbors, wishart_significance):
     ws = Wishart(wishart_neighbors=wishart_neighbors,
                  significance_level=wishart_significance)
 
-    print("--> Fitting KDTree")
-    kdt = ws._fit_kd_tree(z_vectors=reconstructed_ts)
-    print("--> Constructing vertex data")
-    m_d, m_i, v_s = ws._construct_neighbors_matrix(z_vectors=reconstructed_ts, kdtree=kdt)
-    m_i = m_i.astype(int)
-    print("--> Fitting the graph")
-    ws._form_graph(m_d=m_d, m_i=m_i, v_s=v_s)
-    print("--> Finding the cluster centers")
-    ws._form_cluster_centers(data=m_d)
-    print("--> Fitting clusters KDTree")
-    ws._cluster_kdtree(n_lags=len(template))
+    _ = ws.run_wishart(z_vectors=reconstructed_ts)
 
     print("------------------- SAVING/UPLOADING DATA -------------------")
     ds.save_to_volume(ws)
 
-    return len(ws.clusters_completenes), len(ws.significant_clusters)
+    return len(ws.completed_clusters), len(ws.significant_clusters)
 
 
 

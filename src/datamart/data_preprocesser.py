@@ -1,6 +1,9 @@
 import numpy as np
 
+from os import listdir, path
+
 from src.datamart.data_downloader import DataDownloader
+from src.datamart.utils import parse_model_name
 
 
 class DataPreprocessor:
@@ -17,7 +20,7 @@ class DataPreprocessor:
         self.data_downloader = dd
 
     @staticmethod
-    def _reconstruct_lorenz(ts: np.ndarray, template: np.ndarray):
+    def reconstruct_lorenz(ts: np.ndarray, template: np.ndarray):
         """
         Reconstructing the time series to array of z-vectors. For example:
         Time series: [1,2,3,4,5,6,7,8,9,10,11,12]
@@ -69,11 +72,37 @@ class DataPreprocessor:
         ts = self.data_downloader.get_data()
         if self.kind_of_data == "lorenz":
             print("-> Preprocessing modeles lorenz data")
-            return self._reconstruct_lorenz(ts=ts,
+            return self.reconstruct_lorenz(ts=ts,
                                            template=template)
         elif self.kind_of_data == "financial":
             print("-> Preprocessing real financial data")
             return
         else:
             raise Exception("Unrecognized type of data. Should be \"lorenz\"/\"financial\"")
+
+
+class WishartAggregator:
+    """
+    Class which works prepares distributed single-template wishart models in a ready-to-work with form
+    """
+    def __init__(self, path_to_models):
+        self.PATH_MODELS = path_to_models
+
+    def _list_all_models_files(self):
+        """
+        Lists all models files in given directory
+        :return: number of models files found
+        """
+        model_files = listdir(self.PATH_MODELS)
+        # Leave only files, not directories
+        model_files = [f for f in model_files if path.isfile(f)]
+        self.models_files = model_files
+        return len(self.models_files)
+
+    # TODO: Redefine the function so it works with the right format of
+    def _unpack_models(self):
+        """
+
+        :return:
+        """
 
