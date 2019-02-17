@@ -18,7 +18,7 @@ class MongoManager:
         Make a config with params'''
         url = 'mongodb://{user}:{pw}@{hosts}/?replicaSet={rs}&authSource={auth_src}'.format(
             user=quote('user1'),
-            pw=quote('<passwd>'),
+            pw=quote('diploma_test'),
             hosts=','.join([
                 'rc1c-fa410ox5e6dab6yw.mdb.yandexcloud.net:27018'
             ]),
@@ -33,6 +33,14 @@ class MongoManager:
         '''Get lorenz28 series from test column'''
         col = self.dbs['lorenz28']
         return col.find_one()
+    
+    def get_data(self,column_name,field_name=None):
+        '''Get data using predicate filter'''
+        col = self.dbs[column_name]
+        if field_name != None:
+            return col.find({field_name:{"$exists": True}})
+        else:
+            return col.find()
     
     def insert_document(self,column_name,document):
         '''insert any JSON-serializable document
