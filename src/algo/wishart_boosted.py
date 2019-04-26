@@ -90,7 +90,7 @@ class Wishart:
             cluster = self.cluster_tuples[cluster_label]
             cluster_size = cluster.size
             noize_cluster = noize_cluster._replace(size=noize_cluster.size + cluster_size)
-            self.cluster_tuples.pop(cluster_label)
+            self.cluster_tuples[cluster_label] = None
         self.cluster_tuples[0] = noize_cluster
 
     def _add_vertex_to_cluster(self, vertex_index, vertex_radius, cluster_label):
@@ -101,7 +101,6 @@ class Wishart:
         :param cluster_label:
         :return:
         """
-        print("UUUU", len(self.cluster_tuples), cluster_label)
         cluster = self.cluster_tuples[cluster_label]
         vertex_volume = density_near_zvector(radius=vertex_radius,
                                              k_neighbors=self.wishart_neighbors,
@@ -122,8 +121,7 @@ class Wishart:
 
         cluster = cluster._replace(size=cluster.size + 1)
         self.cluster_tuples[cluster_label] = cluster
-        print(self.cluster_tuples)
-        print("-----------------------------")
+
 
     def _merge_two_clusters(self, cluster_reciever_label, cluster_to_be_merged_label):
         """
@@ -132,7 +130,6 @@ class Wishart:
         :param cluster_label_2:
         :return:
         """
-        print("KKKK", len(self.cluster_tuples), cluster_reciever_label, cluster_to_be_merged_label)
         cluster_reciever = self.cluster_tuples[cluster_reciever_label]
         cluster_to_be_merged = self.cluster_tuples[cluster_to_be_merged_label]
 
@@ -150,9 +147,8 @@ class Wishart:
                                         cluster_type=cluster_type,
                                         cluster_label=cluster_reciever.cluster_label)
         self.cluster_tuples[cluster_reciever_label] = new_cluster
-        self.cluster_tuples.pop(cluster_to_be_merged_label)
-        print(self.cluster_tuples)
-        print("-----------------------------")
+        self.cluster_tuples[cluster_to_be_merged_label] = None
+
 
     # TODO: FIX "vertices_radiuses"
     def _check_cluster_significance(self, cluster, matrix_distances) -> bool:
@@ -214,26 +210,20 @@ class Wishart:
         :return: Label of the cluster
         """
 
-        max_cluster = self.clusters.max()
-        if max_cluster == -1:
-            max_cluster = 1
-        else:
-            max_cluster = max_cluster + 1
+        max_cluster = len(self.cluster_tuples)
+
         self.clusters[zvector_index] = max_cluster
-        volume = density_near_zvector(radius=radius,
+        vertex_volume = density_near_zvector(radius=radius,
                                       k_neighbors=self.wishart_neighbors,
                                       n_zvectors=len(self.clusters),
                                       dimension=self.dimension)
-        new_cluster = self.ClusterTuple(min_volume=volume,
-                                        max_volume=volume,
+        new_cluster = self.ClusterTuple(min_volume=vertex_volume,
+                                        max_volume=vertex_volume,
                                         size=1,
                                         cluster_type="isolated",
                                         cluster_label=max_cluster)
         self.cluster_tuples.append(new_cluster)
-        # print(len(self.cluster_tuples), max_cluster)
 
-        control_number = len((set(self.clusters) - {-1, 0} ))
-        assert (len(self.cluster_tuples) - 1) == control_number, "A %i, B %i" %(len(self.cluster_tuples)-1, control_number)
         return max_cluster
 
     def _case_2(self, unique_clusters, vertex: int, matrix_distances: np.ndarray, radius) -> int:
@@ -261,10 +251,6 @@ class Wishart:
                                         cluster_label=connected_cluster)
             self.clusters[vertex] = connected_cluster
             # Check for significance
-            t_start = time.time()
-            # _ = self._check_cluster_significance(cluster=connected_cluster,
-            #                                      matrix_distances=matrix_distances)
-            t_end = time.time()
             self.t42 = self.t42 + (t_end - t_start)
             return connected_cluster
 
@@ -287,16 +273,12 @@ class Wishart:
             self.clusters[vertex] = 0
             return 0
         elif min(unique_clusters) == 0 | len(unique_clusters & self.significant_clusters) > 1:
-            print("CASE 3 POINT 2")
             self.clusters[vertex] = 0
             # Insignificant clusters turned into "background" clusters
             insignificant_to_zero = list(unique_clusters - self.significant_clusters - self.completed_clusters)
             if len(insignificant_to_zero) > 0:
                 self.clusters[np.isin(self.cluster_tuples, np.array(insignificant_to_zero))] = 0
                 self._clusters_to_noize(insignificant_to_zero)
-                # for insignificant_cluster in insignificant_to_zero:
-                #     self.clusters[self.clusters == insignificant_cluster] = 0
-
             significant_to_completed = unique_clusters & self.significant_clusters
             self.completed_clusters = self.completed_clusters | significant_to_completed
             # Clusters, which became completed are not significant any more, so exclude them
@@ -304,7 +286,6 @@ class Wishart:
             self._clusters_to_completed(list(significant_to_completed))
             return 0
         else:
-            print("CASE 3 POINT 3")
             # TODO: Ask if we can collapse into *completed* cluster or not (status quo: completed clusters are all thrown out)
             oldest_cluster = min(unique_clusters)
             self.clusters[vertex] = oldest_cluster
@@ -317,8 +298,6 @@ class Wishart:
                 self.clusters[self.clusters == cluster] = oldest_cluster
                 self._merge_two_clusters(cluster_reciever_label=int(oldest_cluster),
                                          cluster_to_be_merged_label=int(cluster)),
-            # self._check_cluster_significance(cluster=oldest_cluster,
-            #                                  matrix_distances=matrix_distances)
             return oldest_cluster
 
 
