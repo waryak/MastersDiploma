@@ -36,6 +36,7 @@ def density_near_zvector(radius, k_neighbors, n_zvectors, dimension):
     density = k_neighbors / (volume * n_zvectors)
     return density
 
+Cluster = namedtuple('Cluster', ['min_volume', 'max_volume', 'size', 'cluster_type', 'cluster_label'])
 
 class Wishart:
     """
@@ -51,7 +52,7 @@ class Wishart:
         self.significant_clusters = set()  # Set of significant clusters
         self.clusters = None  # List of cluster labels for z-vectors
         self.dimension = dimension
-        self.ClusterTuple = namedtuple('Cluster', ['min_volume', 'max_volume', 'size', 'cluster_type', 'cluster_label'])
+        self.ClusterTuple = Cluster
         self.noize_class = self.ClusterTuple(min_volume=np.inf,
                                              max_volume=0,
                                              size=0,
