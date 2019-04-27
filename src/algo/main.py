@@ -1,9 +1,9 @@
 import yaml
-import numpy as np
 from os import environ
 from pathlib import PurePosixPath
 
-from src.algo.wishart import Wishart
+# from src.algo.wishart import Wishart
+from src.algo.wishart_boosted import Wishart
 from src.datamart.data_saver import DataSaver
 from src.datamart.data_downloader import DataDownloader
 from src.datamart.data_preprocesser import DataPreprocessor

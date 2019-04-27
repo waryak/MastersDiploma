@@ -1,10 +1,12 @@
-import time
-import numpy as np
-from pickle import dump
-from scipy.special import gamma
-from multiprocessing import Pool
-from scipy.spatial import cKDTree
+import pickle as pkl
 from pathlib import PurePosixPath
+from typing import Dict, List
+
+import numpy as np
+from scipy.spatial import cKDTree
+from scipy.special import gamma
+
+from src.datamart.utils import parse_model_name
 
 
 # TODO: WISHART NEEDS HELP!!!!
@@ -319,14 +321,6 @@ class Wishart:
                                                 sorted_vertex_indexes=zv_sorted)
         return list_with_labels
 
-
-
-
-
-
-
-
-
     def _cluster_kdtree(self, n_lags):
         """
         Cuts cluster-centers and find k-nn for them.
@@ -354,124 +348,141 @@ class Wishart:
             prediction = np.nan
         return prediction
 
+############################################################
+# Most optimal structure is: Named tuple ("cluster_center", "cluster_size")
+############################################################
 
+# TODO: Play with cKDTree parameters
+# TODO: Where to
 
-
-
-
-
-
-
-
-
-
-class ParallelWishart:
+def fit_kdtrees(path_to_models: List[PurePosixPath]) -> Dict[str, cKDTree]:
     """
-    Parallelisation of Wishart algorithm
+    Iterates through model files and build cKDTree from cluster centers from the model
+
+    :param path_to_models:
+
+    :return:
     """
+    models = {}
+    predictions = {}
+    for path_to_model in path_to_models:
+        with open(path_to_model.as_posix(), "rb") as f:
+            model = pkl.load(f)
+        model_clusters_truncated = model.cluster_centers[:, :-1]
+        # This is not the literal prediction. These last values can be used in final prediction
+        prediction = model.cluster_centers[:, -1]
+        kdtree = cKDTree(data=model_clusters_truncated)
 
-    def __init__(self, MODEL_PATH: PurePosixPath, k: int, h: float, n_processes: int = 2):
-        self.k = k
-        self.h = h
-        self.n_processes = n_processes
-        self.pool = Pool(processes=n_processes)
-        self.MODEL_PATH = MODEL_PATH
+        template = parse_model_name(path_to_model.name)
+        models[str(template)] = kdtree
+        predictions[str(template)] = prediction
+    return models, predictions
 
-    def __getstate__(self):
-        """
-        This function defines the fields of the class to be pickled.
-        :return: All class fields except for "pool". It cannot be serialized.
-        """
-        self_dict = self.__dict__.copy()
-        del self_dict["pool"]
-        return self_dict
-
-    def _run_single_wishart(self, args):
-        """
-
-        :param args:
-        :return: path to the saved model
-        """
-        ws = Wishart(wishart_neighbors=self.k, significance_level=self.h)
-        print("--> Fitting KDTree")
-        kdt = cKDTree(data=args["z_vectors"])
-        print("--> Constructing vertex data")
-        m_d, m_i, v_s = ws._construct_neighbors_matrix(z_vectors=args["z_vectors"], kdtree=kdt)
-        m_i = m_i.astype(int)
-        print("--> Fitting the graph")
-        ws._form_graph(m_d=m_d, m_i=m_i, v_s=v_s)
-        print("--> Finding the cluster centers")
-        ws._form_cluster_centers(data=m_d)
-        print("--> Fitting clusters KDTree")
-        ws._cluster_kdtree(n_lags=args["n_lags"])
-        path = self.MODEL_PATH / args["model_name"]
-        with open(path, "wb") as f:
-            dump(ws, f)
-        return path
-
-    def run_wishart(self, list_of_args):
-        """
-        Function, running a pool of wishart processes
-        :param list_of_args: a list of argument dictionaries
-        :return:
-        """
-        assert self.n_processes == len(list_of_args), "Number of processes is %d, but number of arguments is %d" % (
-            self.n_processes, len(list_of_args))
-
-        if self.n_processes == 1:
-            print("Running single process mode")
-            path = self._run_single_wishart(list_of_args[0])
-            return path
-        else:
-            print("Running on %d processors" % self.n_processes)
-            paths = self.pool.map(func=self._run_single_wishart, iterable=list_of_args)
-            return paths
-
-
-class ParallelWishart2(Wishart):
+def query_template_from_ts(ts: np.ndarray, template: List ) -> np.ndarray:
     """
-    Parallelisation of Wishart algorithm
+    Queries a template sample from the time_series to make prediction with corresponding KDTree
+    For example, if template is [2,2,3,2] and time series is [...,0,1,2,3,4,5,6,7,8,9], and
+    we have to predict the next point: [...,0,1,2,3,4,5,6,7,8,9,x_to_predict],
+    then the queried result would be [1, 3, 5, 8]
+
+    :param ts:
+    :param template:
+
+    :return:
+    """
+    # Turning a template into indexing array
+    template_reverse_indexing = np.cumsum(template[::-1])
+    return ts[-template_reverse_indexing]
+
+def template_prediction_mean(predictions_from_clusters: np.ndarray) -> float:
+    return predictions_from_clusters.mean()
+def aggregated_prediction_mean(predictions_from_templates: list) -> float:
+    return np.mean(predictions_from_templates)
+
+
+def predict_one_point_forward(dict_with_kdtrees: Dict[str, cKDTree],
+                              dict_with_cluster_predictions: Dict[str, np.ndarray],
+                              templates: List[List],
+                              time_series: np.ndarray):
     """
 
-    def __init__(self, MODEL_PATH: PurePosixPath, wishart_neighbors: int, significance_level: float,
-                 n_processes: int = 2):
-        self.k = wishart_neighbors
-        self.h = significance_level
-        self.n_processes = n_processes
-        self.pool = Pool(processes=n_processes)
+    :param dict_with_kdtrees:
+    :param dict_with_cluster_predictions:
+    :param templates:
+    :param time_series:
+    :return:
+    """
+    # Here we will put predictions from templates (1 per each)
+    predictions = []
+    for template in templates:
+        zvector_to_predict = query_template_from_ts(ts=time_series, template=template)
+        template_cluster_predictions = dict_with_cluster_predictions[str(template)]
+        template_kdtree = dict_with_kdtrees[str(template)]
 
-    def fun(self):
-        r = super.__init__()
-        return r
+        distances_to_clusters, cluster_indexes = template_kdtree.query(x=zvector_to_predict,
+                                                           k=100,
+                                                           distance_upper_bound=5)
+        cluster_indexes = cluster_indexes[~np.isinf(distances_to_clusters)]
+        neighbor_clusters_predictions = template_cluster_predictions[cluster_indexes]
+        template_prediction = template_prediction_mean(neighbor_clusters_predictions)
+        predictions.append(template_prediction)
+    aggregated_prediction = aggregated_prediction_mean(predictions)
+    return aggregated_prediction
 
-    def _run_single_wishart(self, **args):
-        """
 
-        :param args:
-        :return: path to the saved model
-        """
-        ws = Wishart(wishart_neighbors=self.k, significance_level=self.h)
-        kdt = cKDTree(data=args["z_vectors"])
-        m_d, m_i, v_s = ws._construct_neighbors_matrix(z_vectors=args["z_vectors"], kdtree=kdt)
-        m_i = m_i.astype(int)
-        ws._form_graph(m_d=m_d, m_i=m_i, v_s=v_s)
-        path = self.MODEL_PATH / args["model_name"]
-        with open(path, "wb") as f:
-            dump(ws, f)
-        return path
 
-    def run_wishart(self, list_of_args):
-        """
-        Function, running a pool of wishart processes
-        :param list_of_args: a list of argument dictionaries
-        :return:
-        """
-        assert self.n_processes == len(list_of_args), "Number of processes is %d, but number of arguments " \
-                                                      "is %d"(self.n_processes, len(list_of_args))
 
-        if self.n_processes == 1:
-            path = self._run_single_wishart(list_of_args[0])
-            return path
-        else:
-            paths = self.pool.map(func=self._run_single_wishart, iterable=list_of_args)
-            return paths
+
+
+def one_point_prediction(dict_with_kdtrees: Dict[str, cKDTree],
+                         templates: List[List],
+                         time_series: np.ndarray):
+    """
+    Make
+    :return:
+    """
+    for template in templates:
+        query_template_from_ts(ts=time_series, template=template)
+        template_kdtree = dict_with_kdtrees[str(template)]
+
+
+
+
+
+############################################################
+# Most optimal structure is: Named tuple ("cluster_center", "cluster_size")
+############################################################
+
+
+
+# class WishartAggregator:
+#     """
+#     Class which works prepares distributed single-template wishart models in a ready-to-work with form
+#     """
+#     def __init__(self, path_to_models):
+#         self.PATH_MODELS = path_to_models
+#
+#     def _list_all_models_files(self):
+#         """
+#         Lists all models files in given directory
+#         :return: number of models files found
+#         """
+#         model_files = listdir(self.PATH_MODELS)
+#         # Leave only files, not directories
+#         model_files = [PurePosixPath(self.PATH_MODELS) / f for f in model_files if path.isfile(f)]
+#         self.models_files = model_files
+#         return len(self.models_files)
+#
+#     # TODO: Redefine the function so it works with the right format of
+#     def _fit(self):
+#         """
+#
+#         :return:
+#         """
+#         if hasattr(self, "models_files"):
+#             print("Found model files in quantity of %i" % len(self.models_files))
+#         else:
+#             raise Exception("First initialize model files")
+#
+#         for model
+

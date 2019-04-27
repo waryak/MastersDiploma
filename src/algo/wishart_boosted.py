@@ -102,26 +102,34 @@ class Wishart:
         :return:
         """
         cluster = self.cluster_tuples[cluster_label]
+        cluster_type = cluster.cluster_type
         vertex_volume = density_near_zvector(radius=vertex_radius,
                                              k_neighbors=self.wishart_neighbors,
                                              n_zvectors=len(self.clusters),
                                              dimension=self.dimension)
+
         if vertex_volume < cluster.min_volume:
             cluster = cluster._replace(min_volume=vertex_volume)
             difference = abs(vertex_volume - cluster.max_volume)
-            if (difference > self.significance_level) & (cluster_label != 0):
-                self.significant_clusters.add(cluster_label)
-                cluster = cluster._replace(cluster_type="Significant")
+            if cluster_type in ("Completed", "Significant", "Noize"):
+                pass
+            else:
+                if (difference > self.significance_level) & (cluster_label != 0):
+                    self.significant_clusters.add(cluster_label)
+                    cluster = cluster._replace(cluster_type="Significant")
+
         elif vertex_volume > cluster.max_volume:
             cluster = cluster._replace(max_volume=vertex_volume)
             difference = abs(vertex_volume - cluster.min_volume)
-            if (difference > self.significance_level) & (cluster_label != 0):
-                self.significant_clusters.add(cluster_label)
-                cluster = cluster._replace(cluster_type="Significant")
+            if cluster_type in ("Completed", "Significant", "Noize"):
+                pass
+            else:
+                if (difference > self.significance_level) & (cluster_label != 0):
+                    self.significant_clusters.add(cluster_label)
+                    cluster = cluster._replace(cluster_type="Significant")
 
         cluster = cluster._replace(size=cluster.size + 1)
         self.cluster_tuples[cluster_label] = cluster
-
 
     def _merge_two_clusters(self, cluster_reciever_label, cluster_to_be_merged_label):
         """
@@ -148,7 +156,6 @@ class Wishart:
                                         cluster_label=cluster_reciever.cluster_label)
         self.cluster_tuples[cluster_reciever_label] = new_cluster
         self.cluster_tuples[cluster_to_be_merged_label] = None
-
 
     # TODO: FIX "vertices_radiuses"
     def _check_cluster_significance(self, cluster, matrix_distances) -> bool:
@@ -214,9 +221,9 @@ class Wishart:
 
         self.clusters[zvector_index] = max_cluster
         vertex_volume = density_near_zvector(radius=radius,
-                                      k_neighbors=self.wishart_neighbors,
-                                      n_zvectors=len(self.clusters),
-                                      dimension=self.dimension)
+                                             k_neighbors=self.wishart_neighbors,
+                                             n_zvectors=len(self.clusters),
+                                             dimension=self.dimension)
         new_cluster = self.ClusterTuple(min_volume=vertex_volume,
                                         max_volume=vertex_volume,
                                         size=1,
@@ -299,7 +306,6 @@ class Wishart:
                 self._merge_two_clusters(cluster_reciever_label=int(oldest_cluster),
                                          cluster_to_be_merged_label=int(cluster)),
             return oldest_cluster
-
 
     def _find_connections(self, vertex, vertex_neighbors, matrix_indecies):
         """

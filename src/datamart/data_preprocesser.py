@@ -43,6 +43,14 @@ class DataPreprocessor:
         reconstructed_ts = np.concatenate(ts_list, axis=1)
         return reconstructed_ts
 
+    # ?????
+    @staticmethod
+    def reconstruct_lorenz_for_templates():
+        """
+        Recontructs
+        :return:
+        """
+
 
     def preprocess_lorenz(self):
         """
@@ -81,28 +89,10 @@ class DataPreprocessor:
             raise Exception("Unrecognized type of data. Should be \"lorenz\"/\"financial\"")
 
 
-class WishartAggregator:
-    """
-    Class which works prepares distributed single-template wishart models in a ready-to-work with form
-    """
-    def __init__(self, path_to_models):
-        self.PATH_MODELS = path_to_models
 
-    def _list_all_models_files(self):
-        """
-        Lists all models files in given directory
-        :return: number of models files found
-        """
-        model_files = listdir(self.PATH_MODELS)
-        # Leave only files, not directories
-        model_files = [f for f in model_files if path.isfile(f)]
-        self.models_files = model_files
-        return len(self.models_files)
+############################################################
+# Most optimal structure is: Named tuple ("cluster_center", "cluster_size")
+############################################################
 
-    # TODO: Redefine the function so it works with the right format of
-    def _unpack_models(self):
-        """
 
-        :return:
-        """
 
