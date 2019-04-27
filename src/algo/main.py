@@ -2,7 +2,6 @@ import yaml
 from os import environ
 from pathlib import PurePosixPath
 
-# from src.algo.wishart import Wishart
 from src.algo.wishart_boosted import Wishart
 from src.datamart.data_saver import DataSaver
 from src.datamart.data_downloader import DataDownloader
@@ -46,7 +45,8 @@ def main(template, wishart_neighbors, wishart_significance):
                  wishart_neighbors=wishart_neighbors,
                  wishart_significance=wishart_significance))
     ws = Wishart(wishart_neighbors=wishart_neighbors,
-                 significance_level=wishart_significance)
+                 significance_level=wishart_significance,
+                 dimension=5)
 
     _ = ws.run_wishart(z_vectors=reconstructed_ts)
 

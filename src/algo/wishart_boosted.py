@@ -1,4 +1,3 @@
-import time
 import numpy as np
 from scipy.special import gamma
 from scipy.spatial import cKDTree
@@ -170,18 +169,11 @@ class Wishart:
         """
 
         assert cluster in self.clusters, "There is no presence of cluster %i in the graph yet" % cluster
-        time_start = time.time()
         vertices_radiuses = matrix_distances[self.clusters == cluster, self.wishart_neighbors - 1]
-        time_end = time.time()
-        self.t421 = self.t421 + (time_end - time_start)
 
-        time_start = time.time()
         vertex_with_biggest_radius = max(vertices_radiuses)
         vertex_with_smallest_radius = min(vertices_radiuses)
-        time_end = time.time()
-        self.t422 = self.t422 + (time_end - time_start)
 
-        time_start = time.time()
         ball_volume_max = density_near_zvector(radius=vertex_with_biggest_radius,
                                                k_neighbors=self.wishart_neighbors,
                                                n_zvectors=len(self.clusters),
@@ -190,19 +182,12 @@ class Wishart:
                                                k_neighbors=self.wishart_neighbors,
                                                n_zvectors=len(self.clusters),
                                                dimension=self.dimension)
-        time_end = time.time()
-        self.t423 = self.t423 + (time_end - time_start)
 
-        time_start = time.time()
         maximum_difference = abs(ball_volume_max - ball_volume_min)
         if maximum_difference > self.significance_level:
             self.significant_clusters.add(cluster)
-            time_end = time.time()
-            self.t424 = self.t424 + (time_end - time_start)
             return True
         else:
-            time_end = time.time()
-            self.t424 = self.t424 + (time_end - time_start)
             return False
 
     # TODO: Think of the oprimisation in "CONNECTION SEARCH"
@@ -242,11 +227,7 @@ class Wishart:
         :return:
         """
         # Get label of that single class
-        t_start = time.time()
         connected_cluster: int = int(list(unique_clusters)[0])
-
-        t_end = time.time()
-        self.t41 = self.t41 + (t_end - t_start)
         # If cluster is already completed, turn z-vector into "0" cluster
         if connected_cluster in self.completed_clusters:
             self.clusters[vertex] = 0
@@ -258,7 +239,6 @@ class Wishart:
                                         cluster_label=connected_cluster)
             self.clusters[vertex] = connected_cluster
             # Check for significance
-            self.t42 = self.t42 + (t_end - t_start)
             return connected_cluster
 
     def _case_3(self, unique_clusters, vertex: int, matrix_distances: np.ndarray, radius) -> int:
@@ -337,61 +317,30 @@ class Wishart:
         :return: A list with cluster labels, which were given to z-vectors in order of iteration
         """
         cluster_labels = []
-        self.t1 = 0  # 167.56441640853882
-        self.t2 = 0  # 0.8040761947631836
-        self.t3 = 0  # 0.23107004165649414
-        self.t4 = 0  # 849.1414783000946
-        self.t5 = 0  # 20.869484186172485
-        self.t6 = 0  # 7.7937726974487305
 
-        self.t41 = 0
-        self.t42 = 0
-        self.t43 = 0
-
-        self.t421 = 0  # 107.73090982437134
-        self.t422 = 0  # 740.8268837928772
-        self.t423 = 0  # 3.234117031097412
-        self.t424 = 0  # 0.4464876651763916
         for vertex, vertex_neighbors, neighbor_distances in zip(v_s, m_i, m_d):
-            t_start = time.time()
             _, vertex_connections_clusters = self._find_connections(vertex=vertex,
                                                                     vertex_neighbors=vertex_neighbors,
                                                                     matrix_indecies=m_i)
-            t_end = time.time()
-            self.t1 = self.t1 + (t_end - t_start)
             # Do not consider completed clusters in conditions.
-            t_start = time.time()
             unique_clusters = set(vertex_connections_clusters)
-            t_end = time.time()
-            self.t2 = self.t2 + (t_end - t_start)
 
             if len(unique_clusters) == 0:
-                t_start = time.time()
                 cluster_label = self._case_1(zvector_index=vertex,
                                              radius=neighbor_distances[-1])
-                t_end = time.time()
-                self.t3 = self.t3 + (t_end - t_start)
+
             elif len(unique_clusters) == 1:
-                t_start = time.time()
                 cluster_label = self._case_2(unique_clusters=unique_clusters,
                                              vertex=vertex,
                                              matrix_distances=m_d,
                                              radius=neighbor_distances[-1])
-                t_end = time.time()
-                self.t4 = self.t4 + (t_end - t_start)
             else:
-                t_start = time.time()
                 cluster_label = self._case_3(unique_clusters=unique_clusters,
                                              vertex=vertex,
                                              matrix_distances=m_d,
                                              radius=neighbor_distances[-1])
-                t_end = time.time()
-                self.t5 = self.t5 + (t_end - t_start)
-            t_start = time.time()
             cluster_labels.append(cluster_label)
             self.G = np.append(arr=self.G, values=vertex)
-            t_end = time.time()
-            self.t6 = self.t6 + (t_end - t_start)
         return cluster_labels
 
     def _compute_completed_cluster_centers(self, z_vectors, sorted_vertex_indexes) -> None:
